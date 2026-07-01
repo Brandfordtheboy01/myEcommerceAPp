@@ -126,15 +126,7 @@ npm install zustand
 - [x] Fixed Zod validation for empty optional email/phone fields
 - [x] Frontend: try/catch, session check, visible errors, browser console logs
 
-## Remaining Until Finalisation
-- [ ] Install zustand (`npm install zustand`)
-- [ ] Create Supabase project and run `ecommerce/supabase/schema.sql`
-- [ ] Fill Paystack keys in `.env.local` (NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY, PAYSTACK_SECRET_KEY)
-- [ ] Create first admin user manually in Supabase (`UPDATE users SET role = 'admin' WHERE email = '...'`)
-- [ ] Configure Paystack webhook → `https://your-domain/api/webhooks/paystack`
-- [ ] Seed test data (categories, approve a vendor, add products)
-- [ ] Run `npm run dev` and smoke-test full flow
-- [ ] Optional post-MVP: wishlist UI, reviews UI, coupon codes, image upload to storage, email notifications, payout requests
+
 
 ## Architecture Notes
 - Vendor orders + earnings are created in the Paystack webhook (`lib/orders.ts`), not on order insert
