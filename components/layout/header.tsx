@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ShoppingCart, Store, User, LogOut, LayoutDashboard, Shield } from "lucide-react";
+import { ShoppingCart, Store, User, LogOut, LayoutDashboard, Shield, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
@@ -65,6 +65,13 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {email && (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/wishlist">
+                <Heart className="size-4" />
+              </Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" className="relative">
               <ShoppingCart className="size-4" />

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AddToCartButton } from "@/components/products/add-to-cart-button";
+import { ProductReviews } from "@/components/products/product-reviews";
 import { formatCurrency } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +28,12 @@ export default async function ProductDetailPage({
     .select("*")
     .eq("product_id", id)
     .maybeSingle();
+
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("*, users(fullname, email)")
+    .eq("product_id", id)
+    .order("created_at", { ascending: false });
 
   const primaryImage =
     product.product_images?.find((img: { is_primary: boolean }) => img.is_primary)?.image_url ??
@@ -80,6 +87,12 @@ export default async function ProductDetailPage({
           </Link>
         </div>
       </div>
+      <ProductReviews
+        productId={product.id}
+        initialReviews={reviews ?? []}
+        averageRating={stats?.average_rating ?? 0}
+        reviewCount={stats?.review_count ?? 0}
+      />
     </div>
   );
 }

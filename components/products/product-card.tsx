@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -18,10 +19,31 @@ interface ProductCardProps {
 
 export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
   const primaryImage =
     product.product_images?.find((img) => img.is_primary)?.image_url ??
     product.product_images?.[0]?.image_url ??
     null;
+
+  const toggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (isWishlisted) {
+        await fetch(`/api/wishlist?product_id=${product.id}`, { method: "DELETE" });
+      } else {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_id: product.id }),
+        });
+      }
+      setIsWishlisted(!isWishlisted);
+    } catch (error) {
+      console.error("Failed to toggle wishlist:", error);
+    }
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -37,6 +59,14 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
               Low stock
             </Badge>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 bg-background/50 hover:bg-background"
+            onClick={toggleWishlist}
+          >
+            <Heart className={`size-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} />
+          </Button>
         </div>
       </Link>
       <CardContent className="space-y-1 p-4">

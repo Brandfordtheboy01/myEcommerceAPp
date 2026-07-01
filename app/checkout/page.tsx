@@ -18,6 +18,9 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [address, setAddress] = useState({
     fullname: "",
     phone: "",
@@ -28,7 +31,8 @@ export default function CheckoutPage() {
     postal_code: "",
   });
 
-  const total = getTotal();
+  const subtotal = getTotal();
+  const total = subtotal - couponDiscount;
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "";
 
   const config = {
@@ -39,6 +43,36 @@ export default function CheckoutPage() {
   };
 
   const initializePayment = usePaystackPayment(config);
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+
+    setCouponError(null);
+    try {
+      const res = await fetch(`/api/coupons?code=${couponCode}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCouponError(data.error || "Invalid coupon code");
+        setCouponDiscount(0);
+        return;
+      }
+
+      const coupon = data.data;
+      let discount = 0;
+
+      if (coupon.discount_type === "percentage") {
+        discount = (subtotal * coupon.discount) / 100;
+      } else {
+        discount = coupon.discount;
+      }
+
+      setCouponDiscount(discount);
+    } catch (error) {
+      console.error("Failed to apply coupon:", error);
+      setCouponError("Failed to apply coupon");
+    }
+  }
 
   async function handlePay() {
     if (!publicKey) {
@@ -72,6 +106,7 @@ export default function CheckoutPage() {
           price: i.price,
         })),
         shipping_address: address,
+        coupon_code: couponCode || undefined,
       }),
     });
 
@@ -121,9 +156,41 @@ export default function CheckoutPage() {
             </div>
           ))}
           <div className="flex justify-between border-t pt-2 font-semibold">
+            <span>Subtotal</span>
+            <span>{formatCurrency(subtotal)}</span>
+          </div>
+          {couponDiscount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Discount</span>
+              <span>-{formatCurrency(couponDiscount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-t pt-2 font-semibold">
             <span>Total</span>
             <span>{formatCurrency(total)}</span>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Coupon code</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            />
+            <Button onClick={applyCoupon} disabled={!couponCode.trim()}>
+              Apply
+            </Button>
+          </div>
+          {couponError && <p className="mt-2 text-sm text-destructive">{couponError}</p>}
+          {couponDiscount > 0 && (
+            <p className="mt-2 text-sm text-green-600">Coupon applied successfully!</p>
+          )}
         </CardContent>
       </Card>
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,46 @@ export default function NewProductPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to upload image");
+        return;
+      }
+
+      setForm({ ...form, image_url: data.url });
+      setPreviewUrl(data.url);
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      setError("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleRemoveImage() {
+    setForm({ ...form, image_url: "" });
+    setPreviewUrl(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,8 +120,34 @@ export default function NewProductPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input id="image_url" type="url" placeholder="https://..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+              <Label htmlFor="image">Product image</Label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleRemoveImage}
+                    disabled={!previewUrl}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+                {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                {previewUrl && (
+                  <div className="relative aspect-square w-32 overflow-hidden rounded-lg border">
+                    <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                  </div>
+                )}
+              </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>

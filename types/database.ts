@@ -125,3 +125,34 @@ export interface ProductReviewStats {
   average_rating: number;
   review_count: number;
 }
+
+export interface Wishlist {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+  products?: Product;
+}
+
+export interface Review {
+  id: string;
+  user_id: string;
+  product_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+  users?: Pick<User, "fullname" | "email">;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discount: number;
+  discount_type: "percentage" | "fixed";
+  expiry_date: string | null;
+  is_active: boolean;
+  usage_limit: number | null;
+  usage_count: number;
+  created_at: string;
+}

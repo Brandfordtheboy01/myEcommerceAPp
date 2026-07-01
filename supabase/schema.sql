@@ -260,6 +260,8 @@ ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vendor_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vendor_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
 
 -- POLICIES (MVP subset)
 CREATE POLICY "categories_public" ON categories FOR SELECT USING (true);
@@ -295,6 +297,11 @@ CREATE POLICY "admins_products" ON products FOR ALL USING (public.is_admin());
 
 CREATE POLICY "vendor_transactions_own" ON vendor_transactions FOR SELECT USING (public.is_vendor_user(vendor_id));
 
+CREATE POLICY "wishlists_own" ON wishlists FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "coupons_public" ON coupons FOR SELECT USING (is_active = true);
+CREATE POLICY "coupons_admin" ON coupons FOR ALL USING (public.is_admin());
+
 -- VIEWS
 CREATE OR REPLACE VIEW product_review_stats AS
 SELECT product_id, ROUND(AVG(rating)::numeric, 1) AS average_rating, COUNT(*)::integer AS review_count
@@ -308,3 +315,5 @@ VALUES ('product-images', 'product-images', true, 5242880, ARRAY['image/jpeg', '
 ON CONFLICT (id) DO NOTHING;
 
 CREATE POLICY "images_public" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
+CREATE POLICY "images_upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+CREATE POLICY "images_delete" ON storage.objects FOR DELETE USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
