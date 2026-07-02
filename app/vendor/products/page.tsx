@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/layout/empty-state";
 import { formatCurrency } from "@/lib/utils/format";
+import { Package, Plus } from "lucide-react";
 
 export default async function VendorProductsPage() {
   const supabase = await createClient();
@@ -15,29 +17,42 @@ export default async function VendorProductsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My products</h1>
-        <Button asChild><Link href="/vendor/products/new">Add product</Link></Button>
-      </div>
+    <>
+      <PageHeader title="Products" description="Manage your product catalog">
+        <Button asChild>
+          <Link href="/vendor/products/new">
+            <Plus className="size-4" />
+            Add product
+          </Link>
+        </Button>
+      </PageHeader>
 
       {!products?.length ? (
-        <p className="text-muted-foreground">No products yet.</p>
+        <EmptyState
+          icon={Package}
+          title="No products yet"
+          description="Add your first product to start selling on the marketplace."
+          actionLabel="Add product"
+          actionHref="/vendor/products/new"
+        />
       ) : (
         <div className="space-y-3">
           {products.map((p) => (
-            <Card key={p.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">Stock: {p.stock}</p>
-                </div>
-                <p className="font-semibold">{formatCurrency(p.price)}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={p.id}
+              className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-card sm:p-5"
+            >
+              <div>
+                <p className="font-medium">{p.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Stock: {p.stock} · {p.stock === 0 ? "Out of stock" : "Available"}
+                </p>
+              </div>
+              <p className="text-lg font-semibold">{formatCurrency(p.price)}</p>
+            </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

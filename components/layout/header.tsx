@@ -3,12 +3,37 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ShoppingCart, Store, User, LogOut, LayoutDashboard, Shield, Heart } from "lucide-react";
+import {
+  Store,
+  LogOut,
+  LayoutDashboard,
+  Shield,
+  Heart,
+  Menu,
+  Package,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Container } from "@/components/layout/container";
+import { CartSheet } from "@/components/cart/cart-sheet";
 import { createClient } from "@/lib/supabase/client";
 import { useCartStore } from "@/store/cart-store";
+import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/database";
+
+const shopLinks = [
+  { href: "/", label: "Shop" },
+  { href: "/orders", label: "Orders", auth: true },
+  { href: "/wishlist", label: "Wishlist", auth: true },
+];
 
 export function Header() {
   const pathname = usePathname();
@@ -16,11 +41,16 @@ export function Header() {
   const itemCount = useCartStore((s) => s.getItemCount());
   const [role, setRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
+      if (!user) {
+        setRole(null);
+        setEmail(null);
+        return;
+      }
       setEmail(user.email ?? null);
       const { data } = await supabase
         .from("users")
@@ -36,82 +66,161 @@ export function Header() {
     await supabase.auth.signOut();
     setRole(null);
     setEmail(null);
+    setMobileOpen(false);
     router.push("/");
     router.refresh();
   }
 
+  const navLinkClass = (href: string) =>
+    cn(
+      "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+      pathname === href
+        ? "bg-primary/10 text-primary"
+        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+    );
+
+  const mobileNavLinks = [
+    ...shopLinks.filter((l) => !l.auth || email),
+    ...(role === "vendor" ? [{ href: "/vendor", label: "Vendor dashboard" }] : []),
+    ...(role === "admin" ? [{ href: "/admin", label: "Admin dashboard" }] : []),
+  ];
+
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <Store className="size-5" />
-          Marketplace
-        </Link>
+    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
+      <Container>
+        <div className="flex h-16 items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+                  <Menu className="size-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <Store className="size-5 text-primary" />
+                    Marketplace
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="mt-6 flex flex-col gap-1">
+                  {mobileNavLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={navLinkClass(link.href)}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  {!email && (
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileOpen(false)}
+                      className={navLinkClass("/login")}
+                    >
+                      Sign in
+                    </Link>
+                  )}
+                  {email && (
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      Sign out
+                    </button>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
 
-        <nav className="hidden items-center gap-6 text-sm md:flex">
-          <Link href="/" className={pathname === "/" ? "font-medium" : "text-muted-foreground hover:text-foreground"}>
-            Shop
-          </Link>
-          {role === "vendor" && (
-            <Link href="/vendor" className="text-muted-foreground hover:text-foreground">
-              Vendor
+            <Link href="/" className="flex items-center gap-2.5 font-semibold">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Store className="size-4" />
+              </div>
+              <span className="hidden sm:inline">Marketplace</span>
             </Link>
-          )}
-          {role === "admin" && (
-            <Link href="/admin" className="text-muted-foreground hover:text-foreground">
-              Admin
-            </Link>
-          )}
-        </nav>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {email && (
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/wishlist">
-                <Heart className="size-4" />
+          <nav className="hidden items-center gap-1 lg:flex">
+            {shopLinks
+              .filter((l) => !l.auth || email)
+              .map((link) => (
+                <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
+                  {link.label}
+                </Link>
+              ))}
+            {role === "vendor" && (
+              <Link href="/vendor" className={navLinkClass("/vendor")}>
+                Vendor
               </Link>
-            </Button>
-          )}
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/cart" className="relative">
-              <ShoppingCart className="size-4" />
-              {itemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 size-5 justify-center p-0 text-[10px]">
-                  {itemCount}
-                </Badge>
-              )}
-            </Link>
-          </Button>
+            )}
+            {role === "admin" && (
+              <Link href="/admin" className={navLinkClass("/admin")}>
+                Admin
+              </Link>
+            )}
+          </nav>
 
-          {email ? (
-            <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/orders">
-                  <User className="size-4" />
-                  Orders
+          <div className="flex items-center gap-1">
+            {email && (
+              <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex">
+                <Link href="/wishlist" aria-label="Wishlist">
+                  <Heart className="size-4" />
                 </Link>
               </Button>
-              {role === "vendor" && (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href="/vendor"><LayoutDashboard className="size-4" /></Link>
+            )}
+
+            <CartSheet />
+
+            {email ? (
+              <div className="hidden items-center gap-1 sm:flex">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/orders">
+                    <Package className="size-4" />
+                    <span className="hidden md:inline">Orders</span>
+                  </Link>
                 </Button>
-              )}
-              {role === "admin" && (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href="/admin"><Shield className="size-4" /></Link>
+                {role === "vendor" && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href="/vendor" aria-label="Vendor dashboard">
+                      <LayoutDashboard className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+                {role === "admin" && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href="/admin" aria-label="Admin dashboard">
+                      <Shield className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sign out">
+                  <LogOut className="size-4" />
                 </Button>
-              )}
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="size-4" />
-              </Button>
-            </>
-          ) : (
-            <Button size="sm" asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-          )}
+              </div>
+            ) : (
+              <div className="hidden items-center gap-2 sm:flex">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Sign in</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/register">Get started</Link>
+                </Button>
+              </div>
+            )}
+
+            {email && (
+              <div className="hidden items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground xl:flex">
+                <User className="size-3.5" />
+                <span className="max-w-[140px] truncate">{email}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Container>
     </header>
   );
 }

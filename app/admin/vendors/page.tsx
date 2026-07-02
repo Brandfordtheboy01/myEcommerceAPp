@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/layout/empty-state";
+import { Users } from "lucide-react";
 import type { Vendor } from "@/types/database";
 
 export default function AdminVendorsPage() {
@@ -33,38 +34,59 @@ export default function AdminVendorsPage() {
     }
   }
 
-  if (loading) return <p className="p-8 text-center text-muted-foreground">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <Link href="/admin" className="text-sm text-muted-foreground hover:underline">← Dashboard</Link>
-      <h1 className="mt-4 mb-6 text-2xl font-bold">Vendor management</h1>
+    <>
+      <PageHeader
+        title="Vendor management"
+        description="Review and approve vendor applications"
+      />
 
       {!vendors.length ? (
-        <p className="text-muted-foreground">No vendors registered.</p>
+        <EmptyState
+          icon={Users}
+          title="No vendors yet"
+          description="Vendor applications will appear here for review."
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {vendors.map((vendor) => (
-            <Card key={vendor.id}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium">{vendor.business_name}</p>
-                  <p className="text-sm text-muted-foreground">{vendor.business_email}</p>
-                </div>
-                <Badge variant={vendor.status === "approved" ? "default" : "secondary"}>
+            <div
+              key={vendor.id}
+              className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="font-semibold">{vendor.business_name}</p>
+                <p className="text-sm text-muted-foreground">{vendor.business_email}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge variant={vendor.status === "approved" ? "default" : "secondary"} className="capitalize">
                   {vendor.status}
                 </Badge>
                 {vendor.status === "pending" && (
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => updateStatus(vendor.id, "approved")}>Approve</Button>
-                    <Button size="sm" variant="destructive" onClick={() => updateStatus(vendor.id, "rejected")}>Reject</Button>
-                  </div>
+                  <>
+                    <Button size="sm" onClick={() => updateStatus(vendor.id, "approved")}>
+                      Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => updateStatus(vendor.id, "rejected")}>
+                      Reject
+                    </Button>
+                  </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

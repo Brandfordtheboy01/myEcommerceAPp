@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
 import Link from "next/link";
+import { Users, Package, ShoppingCart, Clock } from "lucide-react";
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -18,30 +20,51 @@ export default async function AdminDashboardPage() {
     supabase.from("orders").select("*", { count: "exact", head: true }),
   ]);
 
+  const stats = [
+    { label: "Total vendors", value: vendorCount ?? 0, icon: Users },
+    { label: "Pending approvals", value: pendingVendors ?? 0, icon: Clock, highlight: (pendingVendors ?? 0) > 0 },
+    { label: "Products", value: productCount ?? 0, icon: Package },
+    { label: "Orders", value: orderCount ?? 0, icon: ShoppingCart },
+  ];
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">Admin dashboard</h1>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Vendors</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{vendorCount ?? 0}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Pending approvals</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{pendingVendors ?? 0}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Products</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{productCount ?? 0}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Orders</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{orderCount ?? 0}</p></CardContent>
-        </Card>
+    <>
+      <PageHeader
+        title="Admin dashboard"
+        description="Platform overview and management"
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {stats.map((stat) => (
+          <Card key={stat.label} className="shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+              <stat.icon className="size-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <p className={`text-2xl font-semibold ${stat.highlight ? "text-warning-foreground" : ""}`}>
+                {stat.value}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-      <Button variant="outline" className="mt-6" asChild>
-        <Link href="/admin/vendors">Manage vendors</Link>
-      </Button>
-    </div>
+
+      {(pendingVendors ?? 0) > 0 && (
+        <Card className="mt-6 border-warning bg-warning/30 shadow-card">
+          <CardContent className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="font-medium">Vendors awaiting approval</p>
+              <p className="text-sm text-muted-foreground">
+                {pendingVendors} vendor{pendingVendors !== 1 ? "s" : ""} need your review
+              </p>
+            </div>
+            <Button asChild>
+              <Link href="/admin/vendors">Review vendors</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 }

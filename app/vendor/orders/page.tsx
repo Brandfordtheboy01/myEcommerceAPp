@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/layout/empty-state";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils/format";
+import { ShoppingBag } from "lucide-react";
 import type { VendorOrder } from "@/types/database";
 
 export default function VendorOrdersPage() {
@@ -40,38 +41,54 @@ export default function VendorOrdersPage() {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: status as VendorOrder["status"] } : o)));
   }
 
-  if (loading) return <p className="p-8 text-center text-muted-foreground">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <Link href="/vendor" className="text-sm text-muted-foreground hover:underline">← Dashboard</Link>
-      <h1 className="mt-4 mb-6 text-2xl font-bold">Vendor orders</h1>
+    <>
+      <PageHeader title="Orders" description="Fulfill and track customer orders" />
 
       {!orders.length ? (
-        <p className="text-muted-foreground">No orders yet.</p>
+        <EmptyState
+          icon={ShoppingBag}
+          title="No orders yet"
+          description="When customers purchase your products, orders will appear here for fulfillment."
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {orders.map((order) => (
-            <Card key={order.id}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium">#{order.id.slice(0, 8)}</p>
-                  <p className="text-sm text-muted-foreground">{formatCurrency(order.subtotal)}</p>
-                </div>
-                <Badge>{order.status}</Badge>
-                <div className="flex gap-2">
-                  {order.status === "processing" && (
-                    <Button size="sm" onClick={() => updateStatus(order.id, "shipped")}>Mark shipped</Button>
-                  )}
-                  {order.status === "shipped" && (
-                    <Button size="sm" onClick={() => updateStatus(order.id, "delivered")}>Mark delivered</Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <div
+              key={order.id}
+              className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="font-semibold">#{order.id.slice(0, 8).toUpperCase()}</p>
+                <p className="text-sm text-muted-foreground">{formatCurrency(order.subtotal)}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge variant="outline" className="capitalize">{order.status}</Badge>
+                {order.status === "processing" && (
+                  <Button size="sm" onClick={() => updateStatus(order.id, "shipped")}>
+                    Mark shipped
+                  </Button>
+                )}
+                {order.status === "shipped" && (
+                  <Button size="sm" onClick={() => updateStatus(order.id, "delivered")}>
+                    Mark delivered
+                  </Button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

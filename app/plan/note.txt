@@ -1,0 +1,418 @@
+Multi-Vendor E-Commerce Marketplace Platform
+Technical Documentation & Build Status
+Updated v2.0 — July 2026
+
+Branch: mvp/marketplace-build
+Git root: ecommerce/
+Status: MVP complete — post-MVP polish in progress
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+1. Project Overview
+2. Implementation Status (as-built)
+3. System Architecture
+4. Database Schema
+5. API Routes
+6. Frontend Architecture
+7. Payment Integration
+8. Security
+9. Remaining Work
+10. Deployment & Operations
+11. FAQ
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+1.1 Description
+A multi-vendor e-commerce marketplace where vendors list products, fulfill orders,
+and earn payouts; customers browse, purchase, and review products across vendors in
+one storefront. Payments are centralized via Paystack; vendors handle delivery.
+
+1.2 Technology Stack (current)
+Component          Technology              Version / Notes
+-----------------  ----------------------  ------------------------------------------
+Frontend           Next.js / React         16.2.9 / 19.2.4
+Backend            Supabase (PostgreSQL)   @supabase/supabase-js ^2.110
+Auth               Supabase Auth           via @supabase/ssr
+Payments           Paystack                v3 API + react-paystack ^6.0
+Storage            Supabase Storage        product-images bucket
+Hosting            Vercel                  (not yet configured)
+State              Zustand                 ^5.0.3 (cart, localStorage persist)
+Styling            Tailwind CSS            ^4 + shadcn/ui
+Validation         Zod                     ^4.4.3
+Type Safety        TypeScript              ^5
+
+1.3 Key Features — Status Summary
+
+CUSTOMERS
+  [x] Browse products (home grid, product detail)
+  [x] Shopping cart (Zustand + localStorage)
+  [x] Wishlist UI + API
+  [x] Secure checkout via Paystack
+  [x] Order tracking and history
+  [x] Product reviews and ratings
+  [ ] Search and filtering UI (API supports search/category/vendor; no dedicated page)
+  [ ] Product comparison price / favorites on card (partial — wishlist exists)
+
+VENDORS
+  [x] Registration and onboarding
+  [x] Product listing management (list, add)
+  [x] Image upload to Supabase Storage
+  [x] Order fulfillment workflow (ship / deliver)
+  [x] Earnings tracking (balance, vendor_transactions on payment)
+  [x] Performance dashboard (stats API + overview page)
+  [ ] Payout requests (schema exists; no UI or API)
+  [ ] Product edit / delete
+  [ ] Analytics charts (recharts installed, not wired)
+
+ADMINS
+  [x] Vendor approval and rejection
+  [x] Platform stats (vendors, products, orders counts)
+  [ ] Platform-wide analytics beyond counts
+  [ ] Category management UI
+  [ ] Product moderation
+  [ ] Commission rate management UI
+  [ ] Dispute resolution
+
+================================================================================
+2. IMPLEMENTATION STATUS (AS-BUILT)
+================================================================================
+
+2.1 Completed — Foundation
+  - types/database.ts — full TypeScript types
+  - lib/supabase/ — browser, server, middleware clients
+  - lib/validations.ts — Zod schemas (products, orders, vendors, reviews)
+  - lib/utils/format.ts — currency, kobo conversion
+  - lib/orders.ts — admin client, createVendorOrdersForOrder (commission split)
+  - lib/logger.ts — structured JSON logging
+  - supabase/schema.sql — tables, RLS, triggers, storage bucket
+  - middleware.ts — session + role-based /vendor and /admin protection
+  - .env.example — Supabase + Paystack keys
+
+2.2 Completed — Auth
+  - /login, /register (customer or vendor role)
+  - /vendor-register — business onboarding after auth
+  - POST /api/vendors/register — service role, auto-creates users row
+
+2.3 Completed — Customer Flow
+  - / — product grid with review stats
+  - /products/[id] — detail, add to cart, reviews component
+  - /cart — Zustand cart management
+  - /checkout — Paystack via react-paystack, coupon apply, shipping form
+  - /orders, /orders/[id] — order list and detail
+  - /payment/success, /payment/cancelled
+  - /wishlist — wishlist page + client
+
+2.4 Completed — Vendor Flow
+  - /vendor — dashboard overview (balance, recent orders)
+  - /vendor/products — product list
+  - /vendor/products/new — add product + image upload
+  - /vendor/orders — fulfill orders (status updates)
+  - GET /api/vendor/dashboard/stats
+  - PATCH /api/vendor/orders/[id]/status
+
+2.5 Completed — Admin Flow
+  - /admin — platform stats
+  - /admin/vendors — approve / reject / suspend vendors
+  - PATCH /api/admin/vendors/[id]
+
+2.6 Completed — API Routes
+  POST   /api/orders              Create order + Paystack authorization URL
+  GET    /api/products            List with category, vendor, search filters
+  POST   /api/products            Create product (vendor)
+  POST   /api/vendors/register    Vendor onboarding
+  POST   /api/webhooks/paystack   charge.success / charge.failed
+  GET    /api/vendor/dashboard/stats
+  PATCH  /api/vendor/orders/[id]/status
+  PATCH  /api/admin/vendors/[id]
+  GET/POST /api/wishlist
+  GET/POST /api/reviews
+  POST   /api/coupons             Validate coupon code
+  POST   /api/upload              Image upload to Supabase Storage
+
+2.7 Completed — Post-MVP (marked done in context.md)
+  - Wishlist UI + API
+  - Reviews UI + API
+  - Coupon codes at checkout
+  - Image upload to storage
+
+2.8 Not Yet Implemented
+  - Email notifications (Resend — env vars documented, no integration)
+  - Vendor payout requests + Paystack transfer webhooks
+  - Dedicated product search / filter page
+  - Category admin CRUD
+  - Product edit / delete for vendors
+  - Rate limiting on API routes
+  - Unit / integration / E2E tests
+  - CI/CD (GitHub Actions)
+  - Sentry error monitoring
+  - In-memory caching layer
+  - Mobile app / separate admin panel (planned in v1.0, not started)
+  - payment_logs, system_logs, notifications tables (not in schema)
+  - Full-text search GIN index (documented in v1.0, not in schema.sql)
+  - Webhook reconciliation job for missed Paystack events
+
+================================================================================
+3. SYSTEM ARCHITECTURE
+================================================================================
+
+3.1 High-Level (current)
+Single Next.js 16 App Router application deployed to Vercel (planned).
+All data in Supabase PostgreSQL with RLS. No separate mobile or admin apps yet.
+
+  Browser → Next.js (app/, API routes) → Supabase (PostgREST + Auth + Storage)
+                                      → Paystack (payments + webhooks)
+
+3.2 Order Processing Flow (as implemented)
+  1. Customer adds items to client-side cart (Zustand)
+  2. Checkout POST /api/orders — creates order + order_items (service role)
+  3. Stock decremented via DB trigger on order_items insert
+  4. Customer pays via Paystack (react-paystack on checkout page)
+  5. Paystack webhook POST /api/webhooks/paystack
+     - Validates x-paystack-signature (HMAC-SHA512)
+     - charge.success → payment_status = paid, order_status = processing
+     - createVendorOrdersForOrder() splits items by vendor, calculates commission
+     - Updates vendor balance + vendor_transactions
+  6. Vendor ships / delivers via PATCH /api/vendor/orders/[id]/status
+  7. Customer views order status; can leave review on product detail
+
+NOTE: vendor_orders are created on payment webhook, NOT on order insert.
+This differs from the v1.0 plan trigger approach and is intentional.
+
+================================================================================
+4. DATABASE SCHEMA
+================================================================================
+
+4.1 Tables (in schema.sql)
+  users, categories, vendors, coupons, products, product_images,
+  carts, cart_items, wishlists, orders, vendor_orders, order_items,
+  reviews, vendor_payouts, vendor_transactions
+
+4.2 Views
+  product_review_stats — average_rating, review_count per product
+
+4.3 Storage
+  Bucket: product-images (public, 5MB, jpeg/png/webp)
+
+4.4 Key RLS Policies
+  - Public read: categories, products, product_images, reviews, approved vendors
+  - Users: own row only
+  - Vendors: own products, vendor_orders, vendor_transactions (approved status)
+  - Admins: full access via is_admin() helper
+
+4.5 Indexes (current)
+  idx_products_category, idx_products_vendor, idx_orders_user,
+  idx_vendor_orders_vendor
+
+  Missing from v1.0 plan:
+  - GIN full-text search index on products
+  - Composite indexes on (user_id, order_status), (vendor_id, status)
+
+================================================================================
+5. API ROUTES
+================================================================================
+
+5.1 Authentication
+  Handled by Supabase Auth directly (signUp, signInWithPassword).
+  Vendor follow-up: POST /api/vendors/register
+
+5.2 Products
+  GET  /api/products?category=&vendor=&search=
+  POST /api/products (vendor-authenticated)
+
+5.3 Orders
+  POST /api/orders — cart items, shipping address, optional coupon
+  Returns order + Paystack authorization_url
+
+5.4 Payments
+  Initialized inline in POST /api/orders (not separate /api/payments/initialize)
+  Webhook: POST /api/webhooks/paystack
+
+5.5 Vendor
+  GET   /api/vendor/dashboard/stats
+  PATCH /api/vendor/orders/[id]/status
+
+5.6 Admin
+  PATCH /api/admin/vendors/[id] — approve, reject, suspend
+
+5.7 Post-MVP
+  GET/POST /api/wishlist
+  GET/POST /api/reviews
+  POST     /api/coupons
+  POST     /api/upload
+
+================================================================================
+6. FRONTEND ARCHITECTURE
+================================================================================
+
+6.1 Project Structure (actual)
+ecommerce/
+├── app/
+│   ├── (auth)/login, register, vendor-register
+│   ├── admin/, vendor/
+│   ├── products/[id]
+│   ├── cart/, checkout/, orders/, wishlist/
+│   ├── payment/success, payment/cancelled
+│   ├── api/...
+│   └── plan/note.txt
+├── components/
+│   ├── layout/ (header, footer)
+│   ├── products/ (product-card, add-to-cart, product-reviews)
+│   └── ui/ (shadcn components)
+├── lib/ (supabase, validations, orders, logger, utils)
+├── store/cart-store.ts
+├── types/database.ts
+├── supabase/schema.sql
+└── context.md (build progress tracker)
+
+6.2 State Management
+  Cart: Zustand store with localStorage persist
+    - addItem, removeItem, updateQuantity, clearCart, getTotal, getItemCount
+  Auth: Supabase session (no separate auth store)
+  Wishlist: server-backed via /api/wishlist
+
+6.3 Route Protection (middleware)
+  Public: /, /products/*, /login, /register, /api/*
+  /vendor/* — requires vendor role
+  /admin/* — requires admin role
+  Other routes — requires authenticated session
+
+6.4 Key Components
+  ProductCard — image, name, category, price, rating, add to cart
+  Header — nav, cart badge, wishlist link, role-based dashboard links
+  ProductReviews — list + submit review form
+
+================================================================================
+7. PAYMENT INTEGRATION
+================================================================================
+
+7.1 Client Flow
+  Checkout uses react-paystack (usePaystackPayment hook).
+  Order created first via API; Paystack reference tied to order metadata.
+
+7.2 Webhook
+  Signature verified with PAYSTACK_SECRET_KEY.
+  charge.success → paid + vendor order split
+  charge.failed → payment_status = failed
+
+7.3 Not Implemented
+  - transfer.success for vendor payouts
+  - Confirmation emails on payment
+  - Periodic reconciliation of pending orders
+
+================================================================================
+8. SECURITY
+================================================================================
+
+8.1 Implemented
+  - Row Level Security on all core tables
+  - Zod validation on API inputs
+  - Paystack webhook signature verification
+  - Service role used only server-side for order creation and webhooks
+  - API routes excluded from auth redirect in middleware
+
+8.2 Not Implemented
+  - API rate limiting
+  - payment_logs table / audit trail
+  - CSRF beyond Next.js defaults
+
+8.3 Environment Variables
+  NEXT_PUBLIC_SUPABASE_URL
+  NEXT_PUBLIC_SUPABASE_ANON_KEY
+  SUPABASE_SERVICE_ROLE_KEY
+  PAYSTACK_SECRET_KEY
+  NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
+  NEXT_PUBLIC_APP_URL
+  RESEND_API_KEY          (documented, unused)
+  EMAIL_FROM              (documented, unused)
+
+================================================================================
+9. REMAINING WORK
+================================================================================
+
+9.1 High Priority
+  [ ] Email notifications (order confirmation, vendor new order)
+  [ ] Vendor payout requests (UI + API + Paystack transfer webhook)
+  [ ] Product search / filter page (wire existing GET /api/products params)
+  [ ] Vendor product edit and delete
+  [ ] Configure Paystack webhook in production
+  [ ] Production deploy to Vercel
+
+9.2 Medium Priority
+  [ ] Admin category management
+  [ ] Admin commission rate editing per vendor
+  [ ] Vendor analytics charts (recharts already installed)
+  [ ] Add missing DB indexes (full-text search, composite status indexes)
+  [ ] Webhook reconciliation job for missed events
+
+9.3 Low Priority / Future
+  [ ] Rate limiting middleware
+  [ ] Jest unit tests (commission calculation, validations)
+  [ ] Integration tests for API routes
+  [ ] Cypress E2E checkout flow
+  [ ] GitHub Actions CI/CD
+  [ ] Sentry error monitoring
+  [ ] In-memory caching for categories / stats
+  [ ] Mobile app
+  [ ] Dispute resolution workflow
+  [ ] Server-side cart sync (schema has carts/cart_items; app uses client-only)
+
+================================================================================
+10. DEPLOYMENT & OPERATIONS
+================================================================================
+
+10.1 Local Development
+  cd ecommerce
+  npm install
+  cp .env.example .env.local   # fill Supabase + Paystack keys
+  Run supabase/schema.sql in Supabase SQL Editor
+  npm run dev → http://localhost:3000
+
+10.2 Production (not yet done)
+  Deploy to Vercel with env vars
+  Configure Paystack webhook → https://your-domain/api/webhooks/paystack
+  Enable Supabase connection pooling + SSL
+
+10.3 CI/CD
+  Not configured. No .github/workflows in repo.
+
+10.4 Monitoring
+  lib/logger.ts logs structured events server-side.
+  No Sentry or system_logs table yet.
+
+================================================================================
+11. FAQ
+================================================================================
+
+Q: Why are vendor_orders created on webhook, not order insert?
+A: Prevents vendor earnings for unpaid orders. Commission split only runs after
+   Paystack confirms payment.
+
+Q: Why client-side cart instead of DB carts table?
+A: MVP simplicity. carts/cart_items tables exist in schema for future sync.
+
+Q: Is react-paystack compatible with React 19?
+A: Installed (^6.0.0). context.md noted prior peer conflicts; currently in use
+   on checkout page. Monitor for runtime issues.
+
+Q: How do I create the first admin?
+A: After signup, run in Supabase SQL:
+   UPDATE users SET role = 'admin' WHERE email = 'your@email.com';
+
+Q: What's the merge path when MVP is ready?
+A: PR or merge mvp/marketplace-build → main from ecommerce/ git root.
+   See context.md for exact commands.
+
+================================================================================
+CHANGELOG FROM v1.0
+================================================================================
+- Updated tech stack versions (Next 16, React 19, Zod 4)
+- Corrected project structure (app/ not src/app/)
+- Marked all implemented features with [x] / [ ]
+- Documented actual order flow (webhook-based vendor_orders)
+- Added post-MVP completed items (wishlist, reviews, coupons, upload)
+- Listed gaps: email, payouts, search UI, tests, CI/CD, rate limiting
+- Noted schema tables without app integration (vendor_payouts, carts)
+- Branch and build status from context.md incorporated

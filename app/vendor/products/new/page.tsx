@@ -7,7 +7,7 @@ import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -91,16 +91,11 @@ export default function NewProductPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <Link href="/vendor/products" className="text-sm text-muted-foreground hover:underline">
-        ← Back to products
-      </Link>
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle>Add product</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-w-lg">
+      <PageHeader title="Add product" description="List a new product in your store" />
+
+      <div className="rounded-2xl border bg-card p-6 shadow-card">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -149,13 +144,19 @@ export default function NewProductPage() {
                 )}
               </div>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Saving..." : "Create product"}
-            </Button>
+            {error && (
+              <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>
+            )}
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" className="flex-1" asChild>
+                <Link href="/vendor/products">Cancel</Link>
+              </Button>
+              <Button type="submit" className="flex-1" disabled={loading || uploading}>
+                {loading ? "Saving..." : "Create product"}
+              </Button>
+            </div>
           </form>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

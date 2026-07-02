@@ -1,3 +1,5 @@
+import type { ZodError } from "zod";
+
 type LogLevel = "info" | "warn" | "error";
 
 function log(level: LogLevel, scope: string, message: string, meta?: unknown) {
@@ -26,6 +28,13 @@ export const logger = {
   error: (scope: string, message: string, meta?: unknown) => log("error", scope, message, meta),
 };
 
-export function formatZodError(error: { issues: { path: (string | number)[]; message: string }[] }) {
-  return error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join("; ");
+export function formatZodError(error: ZodError) {
+  return error.issues
+    .map((issue) => {
+      const path = issue.path
+        .filter((segment): segment is string | number => typeof segment === "string" || typeof segment === "number")
+        .join(".");
+      return `${path || "field"}: ${issue.message}`;
+    })
+    .join("; ");
 }

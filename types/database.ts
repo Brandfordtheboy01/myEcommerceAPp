@@ -78,6 +78,7 @@ export interface Order {
   shipping_address: ShippingAddress | null;
   payment_method: string | null;
   payment_reference: string | null;
+  coupon_id: string | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -147,6 +148,7 @@ export interface Review {
 
 export interface Coupon {
   id: string;
+  vendor_id: string;
   code: string;
   discount: number;
   discount_type: "percentage" | "fixed";
@@ -155,4 +157,5 @@ export interface Coupon {
   usage_limit: number | null;
   usage_count: number;
   created_at: string;
+  vendors?: Pick<Vendor, "business_name"> | null;
 }

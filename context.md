@@ -4,104 +4,122 @@
 
 | | |
 |---|---|
-| **Branch** | `mvp/marketplace-build` |
+| **Branch** | `feature/ui-redesign` |
 | **Git root** | `ecommerce/` (all git commands run from here) |
-| **Base** | `main` |
+| **Base** | `mvp/marketplace-build` |
 
-All new MVP work happens on this branch. Do not commit directly to `main` until the MVP is ready to merge.
+UI/UX redesign work happens on this branch. Merge into `mvp/marketplace-build` when ready, then `mvp/marketplace-build` → `main`.
 
 ### Continuing later (pick up where you left off)
 
 ```bash
 cd ecommerce
 git fetch origin
-git checkout mvp/marketplace-build
-git pull origin mvp/marketplace-build   # after first push
+git checkout feature/ui-redesign
+git pull origin feature/ui-redesign   # after first push
 npm install
 npm run dev
 ```
 
 Read this file first — it tracks what's done and what's left.
 
-### When MVP is ready to merge
+### When UI redesign is ready to merge
 
 ```bash
 cd ecommerce
-git checkout main
-git pull origin main
-git merge mvp/marketplace-build
-git push origin main
+git checkout mvp/marketplace-build
+git pull origin mvp/marketplace-build
+git merge feature/ui-redesign
+git push origin mvp/marketplace-build
 ```
 
-Or open a PR: `mvp/marketplace-build` → `main`.
+Or open a PR: `feature/ui-redesign` → `mvp/marketplace-build`.
 
 ---
 
-## Status: MVP scaffold complete (awaiting deps + Supabase setup)
-- [x] Zustand (`npm install zustand`) installed successfully.
-- [x] Resolved `zod` multi-version conflict (unified to `v4.4.3` via root package JSON `overrides`).
-- [x] Dropped `react-paystack` package due to explicit peer conflicts and runtime failures with React 19.
+## Status: MVP complete — UI redesign in progress
 
-## Install (you handle this)
-```bash
-cd ecommerce
-npm install zustand
-```
-**Note**: `@supabase/supabase-js`, `@supabase/ssr`, and `zod` are already installed. Only `zustand` is missing.
+MVP functionality is done on `mvp/marketplace-build`. Current work is a full UI/UX pass on `feature/ui-redesign`.
 
-## Done
+## Done (MVP — on `mvp/marketplace-build`)
 - [x] Foundation — types, Supabase clients (browser/server/middleware), validations, format utils
 - [x] `supabase/schema.sql` — corrected FK order, RLS policies, triggers (vendor orders on payment, not order insert)
 - [x] `.env.example` — Supabase + Paystack keys
 - [x] Auth — login, register (customer/vendor), vendor onboarding
 - [x] Middleware — session check, role-based `/vendor` and `/admin` protection
-- [x] Layout — header (cart badge, nav), footer
-- [x] Customer flow — home (product grid), product detail, cart (Zustand), checkout (Paystack), orders list/detail, payment success/cancel
-- [x] API routes — `POST /api/orders`, `POST /api/products`, `POST /api/vendors/register`, `POST /api/webhooks/paystack`, `PATCH /api/vendor/orders/[id]/status`, `GET /api/vendor/dashboard/stats`, `PATCH /api/admin/vendors/[id]`
+- [x] Customer flow — home, product detail, cart (Zustand), checkout (Paystack), orders list/detail, payment success/cancel
+- [x] API routes — orders, products, vendors, webhooks, vendor/admin, wishlist, reviews, coupons, upload
 - [x] Vendor dashboard — overview, products list, add product, orders (ship/deliver)
 - [x] Admin dashboard — stats, vendor approve/reject
+- [x] Post-MVP — wishlist, reviews, coupons, image upload
+- [x] Supabase project + schema, Paystack keys, seed data, smoke-tested flow
 
-## Recent fixes
-- [x] Middleware no longer redirects `/api/*` to login (was breaking fetch + leaving UI stuck on "Submitting...")
-- [x] Vendor register API uses service role + structured JSON logs (`lib/logger.ts`)
-- [x] Auto-creates missing `public.users` row before vendor insert
-- [x] Fixed Zod validation for empty optional email/phone fields
-- [x] Frontend: try/catch, session check, visible errors, browser console logs
-- [x] Admin dashboard — added missing `Button` and `Link` imports (fixed runtime ReferenceError)
+## Done (UI redesign — on `feature/ui-redesign`)
+- [x] Design system — indigo primary palette, warm backgrounds, success/warning tokens, DM Sans + DM Serif Display fonts
+- [x] Shared layout components — `Container`, `PageHeader`, `EmptyState`, `AuthShell`, `DashboardNav`
+- [x] Header — mobile sheet menu, improved nav active states, cart badge, role-based links
+- [x] Footer — multi-column links (shop, account, support)
+- [x] Home — hero section, product search, category filter chips, improved empty state
+- [x] Product cards — hover effects, add-to-cart feedback, better visual hierarchy
+- [x] Product detail — star ratings, vendor info, image gallery strip, improved layout
+- [x] Cart — two-column layout with sticky order summary sidebar
+- [x] Checkout — two-column layout (shipping/coupon left, summary right)
+- [x] Auth pages — split-panel layout with branded left panel
+- [x] Orders — status color badges, improved list and detail pages
+- [x] Payment success/cancelled — icon-led confirmation screens
+- [x] Wishlist — consistent card grid and empty state
+- [x] Vendor/admin — sidebar dashboard nav via `layout.tsx`, stat cards with icons, loading skeletons
 
-## Remaining Until Finalisation
-- [x] Install zustand (`npm install zustand`)
-- [x] Create Supabase project and run `ecommerce/supabase/schema.sql`
-- [x] Fill Paystack keys in `.env.local` (NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY, PAYSTACK_SECRET_KEY)
-- [x] Create first admin user manually in Supabase (`UPDATE users SET role = 'admin' WHERE email = '...'`)
-- [x] Configure Paystack webhook → `https://your-domain/api/webhooks/paystack` (skipped for now)
-- [x] Seed test data (categories, approve a vendor, add products)
-- [x] Run `npm run dev` and smoke-test full flow
+## Remaining (UI redesign)
+- [ ] Run full build + visual smoke-test (`npm run build && npm run dev`)
+- [ ] Vendor register page — apply new `AuthShell` styling
+- [ ] Product reviews component — match new design tokens
+- [ ] Dark mode polish (tokens defined, not toggled in UI)
+- [ ] Commit and push `feature/ui-redesign`
+
+## Known Issues / To Do
+- [ ] **ngrok in production** — Currently configured with ngrok for local development. Determine if ngrok is needed in production environment or if proper domain/SSL setup is required.
+- [ ] **Order status not updating** — When vendor marks order as delivered, the `order_status` field in the `orders` table is not being updated. Need to investigate the vendor order delivery flow and ensure proper status synchronization.
 
 ## Post-MVP Features (optional)
 - [x] Wishlist UI
 - [x] Reviews UI
-- [x] Coupon codes
+- [x] Coupon codes (vendor-managed, server-validated at checkout)
 - [x] Image upload to storage
 - [ ] Email notifications
 - [ ] Payout requests
+- [ ] Dedicated search results page (home search/filter added in UI redesign)
+
+## Coupon feature (vendor-managed)
+- Vendors create/manage coupons at `/vendor/coupons` (approved vendors only)
+- Each coupon is tied to `vendor_id` — discount applies only to that vendor's cart items
+- Checkout validates via `POST /api/coupons/validate` (preview) and `POST /api/orders` (server-side apply)
+- Order stores `coupon_id`, `discount_amount`, `total_amount`; Paystack charges `order.total_amount`
+- Usage count increments on successful Paystack webhook payment
+- **Migration**: run `supabase/migrations/20260702_coupons_vendor_id.sql` on existing Supabase projects
 
 ## Architecture Notes
 - Vendor orders + earnings are created in the Paystack webhook (`lib/orders.ts`), not on order insert
 - Orders API uses service role to insert order + items (bypasses RLS for atomic creation)
 - Cart is client-side (Zustand + localStorage persist)
+- Home page supports `?search=` and `?category=` query params for filtering
 
 ## App structure
 ```
 ecommerce/
 ├── app/
 │   ├── (auth)/login, register, vendor-register
-│   ├── admin/, vendor/
-│   ├── products/[id], cart, checkout, orders
+│   ├── admin/          (+ layout.tsx with sidebar nav)
+│   ├── vendor/         (+ layout.tsx with sidebar nav)
+│   ├── products/[id], cart, checkout, orders, wishlist
 │   ├── payment/success, payment/cancelled
+│   ├── plan/note.txt   (updated build plan v2.0)
 │   └── api/...
-├── components/layout, products
-├── lib/supabase, validations, orders
+├── components/
+│   ├── layout/         container, page-header, empty-state, auth-shell, dashboard-nav, header, footer
+│   ├── products/       product-card, product-search, category-filter, add-to-cart-button, product-reviews
+│   └── ui/             shadcn components
+├── lib/supabase, validations, orders, logger
 ├── store/cart-store.ts
 └── supabase/schema.sql
 ```

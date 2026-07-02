@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { incrementCouponUsage } from "@/lib/coupons";
 
 export function createAdminClient() {
   return createClient(
@@ -9,6 +10,22 @@ export function createAdminClient() {
 
 export async function createVendorOrdersForOrder(orderId: string) {
   const supabase = createAdminClient();
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("coupon_id, discount_amount")
+    .eq("id", orderId)
+    .single();
+
+  let couponVendorId: string | null = null;
+  if (order?.coupon_id) {
+    const { data: coupon } = await supabase
+      .from("coupons")
+      .select("vendor_id")
+      .eq("id", order.coupon_id)
+      .single();
+    couponVendorId = coupon?.vendor_id ?? null;
+  }
 
   const { data: items } = await supabase
     .from("order_items")
@@ -36,7 +53,11 @@ export async function createVendorOrdersForOrder(orderId: string) {
     if (existing) continue;
 
     const vendorItems = items.filter((i) => i.products?.vendor_id === vendorId);
-    const subtotal = vendorItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    let subtotal = vendorItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    if (vendorId === couponVendorId && order?.discount_amount) {
+      subtotal = Math.max(0, subtotal - order.discount_amount);
+    }
 
     const { data: vendor } = await supabase
       .from("vendors")
