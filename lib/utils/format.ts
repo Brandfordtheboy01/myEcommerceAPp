@@ -1,12 +1,12 @@
-export function formatCurrency(amount: number, currency = "NGN") {
-  return new Intl.NumberFormat("en-NG", {
+export function formatCurrency(amount: number, currency = "GHS") {
+  return new Intl.NumberFormat("en-GH", {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
   }).format(amount);
 }
 
-export function toKobo(amount: number) {
+export function toPesewas(amount: number) {
   return Math.round(amount * 100);
 }
 

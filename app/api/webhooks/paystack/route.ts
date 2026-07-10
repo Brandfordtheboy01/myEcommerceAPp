@@ -1,6 +1,7 @@
 import { createHmac } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient, createVendorOrdersForOrder } from "@/lib/orders";
+import { incrementCouponUsage } from "@/lib/coupons";
 
 function verifyPaystackSignature(body: string, signature: string | null) {
   if (!signature || !process.env.PAYSTACK_SECRET_KEY) return false;
@@ -41,6 +42,16 @@ export async function POST(request: Request) {
       .eq("id", orderId);
 
     await createVendorOrdersForOrder(orderId);
+
+    const { data: paidOrder } = await supabase
+      .from("orders")
+      .select("coupon_id")
+      .eq("id", orderId)
+      .single();
+
+    if (paidOrder?.coupon_id) {
+      await incrementCouponUsage(supabase, paidOrder.coupon_id);
+    }
   }
 
   if (event.event === "charge.failed") {

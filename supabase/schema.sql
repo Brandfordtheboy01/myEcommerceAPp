@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS vendors (
 
 CREATE TABLE IF NOT EXISTS coupons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
   code TEXT NOT NULL UNIQUE,
   discount DECIMAL(10, 2) NOT NULL CHECK (discount > 0),
   discount_type TEXT NOT NULL DEFAULT 'percentage'
@@ -54,6 +55,8 @@ CREATE TABLE IF NOT EXISTS coupons (
   usage_count INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_coupons_vendor ON coupons(vendor_id);
 
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -300,6 +303,8 @@ CREATE POLICY "vendor_transactions_own" ON vendor_transactions FOR SELECT USING 
 CREATE POLICY "wishlists_own" ON wishlists FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "coupons_public" ON coupons FOR SELECT USING (is_active = true);
+CREATE POLICY "coupons_vendor_own" ON coupons FOR ALL USING (public.is_vendor_user(vendor_id))
+  WITH CHECK (public.is_vendor_user(vendor_id));
 CREATE POLICY "coupons_admin" ON coupons FOR ALL USING (public.is_admin());
 
 -- VIEWS

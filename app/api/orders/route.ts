@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/orders";
+import { resolveCouponForCart } from "@/lib/coupons";
 import { createOrderSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
@@ -18,12 +19,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { items, shipping_address } = parsed.data;
+  const { items, shipping_address, coupon_code } = parsed.data;
   const productIds = items.map((i) => i.product_id);
+  const admin = createAdminClient();
 
-  const { data: products } = await supabase
+  const { data: products } = await admin
     .from("products")
-    .select("id, stock, price")
+    .select("id, stock, price, vendor_id")
     .in("id", productIds);
 
   if (!products || products.length !== items.length) {
@@ -38,17 +40,47 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    if (product.price !== item.price) {
+      return NextResponse.json(
+        { error: "Product prices have changed. Refresh your cart and try again." },
+        { status: 400 }
+      );
+    }
   }
 
+  const cartLines = items.map((item) => {
+    const product = products.find((p) => p.id === item.product_id)!;
+    return {
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.price,
+      vendor_id: product.vendor_id,
+    };
+  });
+
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const admin = createAdminClient();
+  let discountAmount = 0;
+  let couponId: string | null = null;
+
+  if (coupon_code) {
+    const couponResult = await resolveCouponForCart(admin, coupon_code, cartLines);
+    if (!couponResult.ok) {
+      return NextResponse.json({ error: couponResult.error }, { status: 400 });
+    }
+    discountAmount = couponResult.discount_amount;
+    couponId = couponResult.coupon.id;
+  }
+
+  const totalAmount = Math.round((subtotal - discountAmount) * 100) / 100;
 
   const { data: order, error: orderError } = await admin
     .from("orders")
     .insert({
       user_id: user.id,
-      total_amount: subtotal,
+      total_amount: totalAmount,
       subtotal_amount: subtotal,
+      discount_amount: discountAmount,
+      coupon_id: couponId,
       shipping_address,
       payment_status: "pending",
       order_status: "pending",

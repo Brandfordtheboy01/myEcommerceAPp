@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/layout/empty-state";
+import { Container } from "@/components/layout/container";
 import { formatCurrency } from "@/lib/utils/format";
 import type { Wishlist } from "@/types/database";
 
@@ -31,29 +33,25 @@ export function WishlistClient({ wishlist }: WishlistClientProps) {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <Heart className="mx-auto mb-4 size-12 text-muted-foreground" />
-          <h2 className="text-xl font-semibold">Your wishlist is empty</h2>
-          <p className="mt-2 text-muted-foreground">
-            Save products you love by clicking the heart icon.
-          </p>
-          <Link href="/">
-            <Button className="mt-4">Browse products</Button>
-          </Link>
-        </div>
-      </div>
+      <Container className="py-8 sm:py-10">
+        <PageHeader title="Wishlist" description="Products you've saved for later" />
+        <EmptyState
+          icon={Heart}
+          title="Your wishlist is empty"
+          description="Tap the heart on any product to save it here for easy access later."
+          actionLabel="Browse products"
+          actionHref="/"
+        />
+      </Container>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">My Wishlist</h1>
-        <p className="mt-2 text-muted-foreground">
-          {items.length} {items.length === 1 ? "item" : "items"} saved
-        </p>
-      </div>
+    <Container className="py-8 sm:py-10">
+      <PageHeader
+        title="Wishlist"
+        description={`${items.length} saved item${items.length !== 1 ? "s" : ""}`}
+      />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {items.map((item) => {
@@ -66,39 +64,35 @@ export function WishlistClient({ wishlist }: WishlistClientProps) {
             null;
 
           return (
-            <Card key={item.id} className="overflow-hidden">
-              <Link href={`/products/${product.id}`}>
-                <div className="relative aspect-square bg-muted">
-                  {primaryImage ? (
-                    <Image src={primaryImage} alt={product.name} fill className="object-cover" unoptimized />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted-foreground">No image</div>
-                  )}
-                </div>
+            <article
+              key={item.id}
+              className="group overflow-hidden rounded-2xl border bg-card shadow-card transition-all hover:shadow-card-hover"
+            >
+              <Link href={`/products/${product.id}`} className="relative block aspect-[4/5] bg-muted">
+                {primaryImage ? (
+                  <Image src={primaryImage} alt={product.name} fill className="object-cover transition-transform group-hover:scale-105" unoptimized />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">No image</div>
+                )}
               </Link>
-              <CardContent className="space-y-1 p-4">
-                <Link href={`/products/${product.id}`} className="line-clamp-1 font-medium hover:underline">
+              <div className="p-4">
+                <Link href={`/products/${product.id}`} className="line-clamp-2 font-medium hover:text-primary">
                   {product.name}
                 </Link>
-                {product.categories?.name && (
-                  <p className="text-xs text-muted-foreground">{product.categories.name}</p>
-                )}
-                <p className="text-lg font-semibold">{formatCurrency(product.price)}</p>
-              </CardContent>
-              <CardFooter className="p-4 pt-0">
+                <p className="mt-2 text-lg font-semibold">{formatCurrency(product.price)}</p>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="mt-4 w-full"
                   onClick={() => removeFromWishlist(product.id)}
                 >
-                  <Trash2 className="mr-2 size-4" />
+                  <Trash2 className="size-4" />
                   Remove
                 </Button>
-              </CardFooter>
-            </Card>
+              </div>
+            </article>
           );
         })}
       </div>
-    </div>
+    </Container>
   );
 }

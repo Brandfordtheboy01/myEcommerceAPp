@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ShoppingBag, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthShell } from "@/components/layout/auth-shell";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -58,48 +60,78 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create account</CardTitle>
-          <CardDescription>Join as a customer or vendor</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullname">Full name</Label>
-              <Input id="fullname" value={fullname} onChange={(e) => setFullname(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Account type</Label>
-              <div className="flex gap-2">
-                <Button type="button" variant={role === "customer" ? "default" : "outline"} onClick={() => setRole("customer")} className="flex-1">
-                  Customer
-                </Button>
-                <Button type="button" variant={role === "vendor" ? "default" : "outline"} onClick={() => setRole("vendor")} className="flex-1">
-                  Vendor
-                </Button>
-              </div>
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating..." : "Create account"}
-            </Button>
-          </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-foreground underline">Sign in</Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell title="Create your account" description="Join as a shopper or start selling today">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <Label>Account type</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setRole("customer")}
+              className={cn(
+                "flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-sm font-medium transition-all",
+                role === "customer"
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border hover:border-primary/40"
+              )}
+            >
+              <ShoppingBag className="size-5" />
+              Shop
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("vendor")}
+              className={cn(
+                "flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-sm font-medium transition-all",
+                role === "vendor"
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border hover:border-primary/40"
+              )}
+            >
+              <Store className="size-5" />
+              Sell
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="fullname">Full name</Label>
+          <Input id="fullname" value={fullname} onChange={(e) => setFullname(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            required
+          />
+          <p className="text-xs text-muted-foreground">At least 6 characters</p>
+        </div>
+
+        {error && (
+          <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+          {loading ? "Creating account..." : "Create account"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

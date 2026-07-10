@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { CheckCircle2, Package, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
 
 export default async function PaymentSuccessPage({
   searchParams,
@@ -9,22 +11,37 @@ export default async function PaymentSuccessPage({
   const { order } = await searchParams;
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16 text-center">
-      <h1 className="text-2xl font-bold text-green-600">Payment successful</h1>
-      <p className="mt-2 text-muted-foreground">
-        Thank you! Your order is being processed.
-        {order && ` Order #${order.slice(0, 8)}`}
-      </p>
-      <div className="mt-6 flex justify-center gap-4">
+    <Container size="sm" className="py-16 sm:py-24">
+      <div className="mx-auto max-w-md text-center">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-success/15 text-success">
+          <CheckCircle2 className="size-8" />
+        </div>
+        <h1 className="text-2xl font-semibold sm:text-3xl">Payment successful!</h1>
+        <p className="mt-3 text-muted-foreground">
+          Thank you for your purchase. Your order is being processed and vendors will be notified.
+        </p>
         {order && (
-          <Button asChild variant="outline">
-            <Link href={`/orders/${order}`}>View order</Link>
-          </Button>
+          <p className="mt-2 text-sm font-medium">
+            Order #{order.slice(0, 8).toUpperCase()}
+          </p>
         )}
-        <Button asChild>
-          <Link href="/">Continue shopping</Link>
-        </Button>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          {order && (
+            <Button asChild variant="outline">
+              <Link href={`/orders/${order}`}>
+                <Package className="size-4" />
+                View order
+              </Link>
+            </Button>
+          )}
+          <Button asChild>
+            <Link href="/">
+              Continue shopping
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </div>
       </div>
-    </div>
+    </Container>
   );
 }

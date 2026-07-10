@@ -59,3 +59,32 @@ export const updateVendorOrderStatusSchema = z.object({
   shipping_method: z.string().optional(),
   notes: z.string().optional(),
 });
+
+export const createCouponSchema = z.object({
+  code: z.string().min(3).max(32).transform((v) => v.toUpperCase()),
+  discount: z.number().positive(),
+  discount_type: z.enum(["percentage", "fixed"]),
+  expiry_date: z.string().optional().nullable(),
+  usage_limit: z.number().int().positive().optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.discount_type === "percentage" && data.discount > 100) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Percentage discount cannot exceed 100",
+      path: ["discount"],
+    });
+  }
+});
+
+export const validateCouponSchema = z.object({
+  code: z.string().min(1),
+  items: z
+    .array(
+      z.object({
+        product_id: z.string().uuid(),
+        quantity: z.number().int().positive(),
+        price: z.number().positive(),
+      })
+    )
+    .min(1),
+});
