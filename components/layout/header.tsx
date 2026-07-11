@@ -38,6 +38,10 @@ const shopLinks = [
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  
+  const isDashboard = pathname.startsWith("/admin") || pathname.startsWith("/vendor");
+  if (isDashboard) return null;
+
   const itemCount = useCartStore((s) => s.getItemCount());
   const [role, setRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState<string | null>(null);
