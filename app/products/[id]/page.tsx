@@ -5,11 +5,13 @@ import { ArrowLeft, Star, Store, Package } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AddToCartButton } from "@/components/products/add-to-cart-button";
 import { ProductReviews } from "@/components/products/product-reviews";
+import { ProductRecommendations } from "@/components/products/product-recommendations";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
+import type { Product, ProductReviewStats } from "@/types/database";
 
 export default async function ProductDetailPage({
   params,
@@ -38,6 +40,48 @@ export default async function ProductDetailPage({
     .select("*, users(fullname, email)")
     .eq("product_id", id)
     .order("created_at", { ascending: false });
+
+  // Fetch recommendations
+  const [
+    { data: sameVendorProducts },
+    { data: otherVendorProducts },
+  ] = await Promise.all([
+    // Products from same vendor (excluding current product)
+    supabase
+      .from("products")
+      .select("*, categories(name), product_images(*)")
+      .eq("vendor_id", product.vendor_id)
+      .neq("id", id)
+      .order("created_at", { ascending: false })
+      .limit(4),
+    // Products from other vendors in same category (excluding current product and vendor)
+    supabase
+      .from("products")
+      .select("*, categories(name), product_images(*)")
+      .eq("category_id", product.category_id)
+      .neq("id", id)
+      .neq("vendor_id", product.vendor_id)
+      .order("created_at", { ascending: false })
+      .limit(4),
+  ]);
+
+  // Get review stats for recommended products
+  const allRecommendedProductIds = [
+    ...(sameVendorProducts ?? []).map((p) => p.id),
+    ...(otherVendorProducts ?? []).map((p) => p.id),
+  ];
+
+  let recommendedReviewStats: Record<string, ProductReviewStats> = {};
+  if (allRecommendedProductIds.length > 0) {
+    const { data: recommendedStats } = await supabase
+      .from("product_review_stats")
+      .select("*")
+      .in("product_id", allRecommendedProductIds);
+
+    recommendedReviewStats = Object.fromEntries(
+      (recommendedStats ?? []).map((s) => [s.product_id, s as ProductReviewStats])
+    );
+  }
 
   const images = product.product_images ?? [];
   const primaryImage =
@@ -156,6 +200,15 @@ export default async function ProductDetailPage({
           reviewCount={stats?.review_count ?? 0}
         />
       </div>
+
+      <ProductRecommendations
+        currentProductId={product.id}
+        currentVendorId={product.vendor_id}
+        currentCategoryId={product.category_id}
+        sameVendorProducts={sameVendorProducts ?? []}
+        otherVendorProducts={otherVendorProducts ?? []}
+        reviewStats={recommendedReviewStats}
+      />
     </Container>
   );
 }

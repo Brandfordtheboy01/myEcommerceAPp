@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Heart, ShoppingBag, Check } from "lucide-react";
+import { Heart, Check, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/store/cart-store";
@@ -21,6 +21,7 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
   const addItem = useCartStore((s) => s.addItem);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [added, setAdded] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
 
   const primaryImage =
     product.product_images?.find((img) => img.is_primary)?.image_url ??
@@ -48,6 +49,7 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
+    e.stopPropagation();
     addItem({
       productId: product.id,
       name: product.name,
@@ -60,14 +62,18 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
   }
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
-      <Link href={`/products/${product.id}`} className="relative block aspect-[4/5] overflow-hidden bg-muted">
+    <Link
+      href={`/products/${product.id}`}
+      className="group block relative w-full h-64 sm:h-96 rounded-2xl overflow-hidden shadow-md ring-1 ring-black/5"
+    >
+      {/* Base image layer */}
+      <div className="absolute inset-0 bg-[#F5F5F5]">
         {primaryImage ? (
           <Image
             src={primaryImage}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             unoptimized
           />
         ) : (
@@ -75,77 +81,99 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
             No image
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+      </div>
 
-        {product.stock > 0 && product.stock <= 5 && (
-          <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground">
-            Only {product.stock} left
-          </Badge>
+      {/* Subtle top gradient so heart icon stays visible on light images */}
+      <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
+
+      {/* Wishlist heart button */}
+      <button
+        onClick={toggleWishlist}
+        className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition hover:bg-white/30"
+      >
+        <Heart
+          size={18}
+          className={cn("transition", isWishlisted ? "text-white" : "text-white/90")}
+          fill={isWishlisted ? "white" : "none"}
+        />
+      </button>
+
+      {/* Mobile reveal button */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowPanel(!showPanel);
+        }}
+        className="sm:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm transition hover:bg-white/40"
+      >
+        <ChevronUp
+          size={20}
+          className={cn("transition text-white", showPanel ? "rotate-180" : "")}
+        />
+      </button>
+
+      {/* Hover info panel */}
+      <div
+        className={cn(
+          "absolute inset-x-0 bottom-0 transition-transform duration-300 ease-out",
+          showPanel ? "translate-y-0" : "translate-y-[68%]",
+          "sm:translate-y-[68%] sm:group-hover:translate-y-0",
+          "bg-black/60 backdrop-blur-md border-t border-white/20",
+          "rounded-2xl px-5 pt-5 pb-5 flex flex-col gap-3"
         )}
-        {product.stock === 0 && (
-          <Badge variant="secondary" className="absolute top-3 left-3">
-            Sold out
-          </Badge>
+      >
+        <p className="font-semibold text-white text-base leading-snug line-clamp-1 drop-shadow-sm">
+          {product.name}
+        </p>
+
+        {(product.size || product.color) && (
+          <div className="flex flex-wrap gap-2">
+            {product.size && (
+              <Badge
+                variant="secondary"
+                className="rounded-full text-xs font-normal bg-white/30 text-white border-white/20 px-3 py-1"
+              >
+                {product.size}
+              </Badge>
+            )}
+            {product.color && (
+              <Badge
+                variant="secondary"
+                className="rounded-full text-xs font-normal bg-white/30 text-white border-white/20 px-3 py-1"
+              >
+                {product.color}
+              </Badge>
+            )}
+          </div>
         )}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "absolute top-3 right-3 size-9 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background",
-            isWishlisted && "text-destructive"
-          )}
-          onClick={toggleWishlist}
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          <Heart className={cn("size-4", isWishlisted && "fill-current")} />
-        </Button>
-      </Link>
+        {product.description && (
+          <p className="text-xs text-white/80 leading-relaxed line-clamp-2">
+            {product.description}
+          </p>
+        )}
 
-      <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          {product.categories?.name && (
-            <span className="text-xs font-medium uppercase tracking-wide text-primary">
-              {product.categories.name}
-            </span>
-          )}
-          {reviewCount > 0 && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Star className="size-3 fill-amber-400 text-amber-400" />
-              <span className="font-medium text-foreground">{rating.toFixed(1)}</span>
-              <span>({reviewCount})</span>
-            </div>
-          )}
-        </div>
-
-        <Link href={`/products/${product.id}`}>
-          <h3 className="line-clamp-2 font-medium leading-snug transition-colors group-hover:text-primary">
-            {product.name}
-          </h3>
-        </Link>
-
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-          <p className="text-lg font-semibold">{formatCurrency(product.price)}</p>
+        <div className="flex items-center justify-between pt-2 gap-3">
+          <div className="flex flex-col gap-0.5">
+            <p className="text-[10px] uppercase tracking-wide text-white/70">Price</p>
+            <p className="font-semibold text-white text-lg">{formatCurrency(product.price)}</p>
+          </div>
           <Button
             size="sm"
-            disabled={product.stock === 0}
             onClick={handleAddToCart}
-            className="shrink-0"
+            className="rounded-full bg-white text-slate-900 hover:bg-white/90 px-4"
           >
             {added ? (
-              <>
-                <Check className="size-4" />
-                Added
-              </>
+              <span className="flex items-center gap-1.5">
+                <Check size={14} /> Added
+              </span>
             ) : (
-              <>
-                <ShoppingBag className="size-4" />
-                Add
-              </>
+              "Add to cart"
             )}
           </Button>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

@@ -90,13 +90,58 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
-      <Container>
-        <div className="flex h-16 items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md">
+      <div className="mx-6">
+        <div className="flex items-center justify-between max-w-7xl mx-auto py-4 transition-all">
+
+          <Link href="/" className="relative text-4xl font-semibold text-slate-700">
+            <span className="text-green-600">go</span>cart<span className="text-green-600 text-5xl leading-0">.</span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden sm:flex items-center gap-4 lg:gap-8 text-slate-600">
+            <Link href="/" className={pathname === "/" ? "text-primary font-medium" : "hover:text-primary transition"}>Home</Link>
+            <Link href="/products" className={pathname === "/products" ? "text-primary font-medium" : "hover:text-primary transition"}>Shop</Link>
+            {email && (
+              <Link href="/orders" className={pathname === "/orders" ? "text-primary font-medium" : "hover:text-primary transition"}>Orders</Link>
+            )}
+            {email && (
+              <Link href="/wishlist" className={pathname === "/wishlist" ? "text-primary font-medium" : "hover:text-primary transition"}>Wishlist</Link>
+            )}
+
+            <CartSheet />
+
+            {role === "vendor" && (
+              <Link href="/vendor" className="text-sm hover:text-primary transition">Vendor</Link>
+            )}
+            {role === "admin" && (
+              <Link href="/admin" className="text-sm hover:text-primary transition">Admin</Link>
+            )}
+
+            {email ? (
+              <Button 
+                size="sm" 
+                onClick={handleLogout}
+                className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full"
+              >
+                Logout
+              </Button>
+            ) : (
+              <Button 
+                size="sm" 
+                asChild
+                className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full"
+              >
+                <Link href="/login">Login</Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="sm:hidden">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+                <Button variant="ghost" size="icon" aria-label="Open menu">
                   <Menu className="size-5" />
                 </Button>
               </SheetTrigger>
@@ -139,92 +184,10 @@ export function Header() {
                 </nav>
               </SheetContent>
             </Sheet>
-
-            <Link href="/" className="flex items-center gap-2.5 font-semibold">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Store className="size-4" />
-              </div>
-              <span className="hidden sm:inline">Marketplace</span>
-            </Link>
-          </div>
-
-          <nav className="hidden items-center gap-1 lg:flex">
-            {shopLinks
-              .filter((l) => !l.auth || email)
-              .map((link) => (
-                <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
-                  {link.label}
-                </Link>
-              ))}
-            {role === "vendor" && (
-              <Link href="/vendor" className={navLinkClass("/vendor")}>
-                Vendor
-              </Link>
-            )}
-            {role === "admin" && (
-              <Link href="/admin" className={navLinkClass("/admin")}>
-                Admin
-              </Link>
-            )}
-          </nav>
-
-          <div className="flex items-center gap-1">
-            {email && (
-              <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex">
-                <Link href="/wishlist" aria-label="Wishlist">
-                  <Heart className="size-4" />
-                </Link>
-              </Button>
-            )}
-
-            <CartSheet />
-
-            {email ? (
-              <div className="hidden items-center gap-1 sm:flex">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/orders">
-                    <Package className="size-4" />
-                    <span className="hidden md:inline">Orders</span>
-                  </Link>
-                </Button>
-                {role === "vendor" && (
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href="/vendor" aria-label="Vendor dashboard">
-                      <LayoutDashboard className="size-4" />
-                    </Link>
-                  </Button>
-                )}
-                {role === "admin" && (
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href="/admin" aria-label="Admin dashboard">
-                      <Shield className="size-4" />
-                    </Link>
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sign out">
-                  <LogOut className="size-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="hidden items-center gap-2 sm:flex">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">Sign in</Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link href="/register">Get started</Link>
-                </Button>
-              </div>
-            )}
-
-            {email && (
-              <div className="hidden items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground xl:flex">
-                <User className="size-3.5" />
-                <span className="max-w-[140px] truncate">{email}</span>
-              </div>
-            )}
           </div>
         </div>
-      </Container>
-    </header>
+      </div>
+      <hr className="border-gray-300" />
+    </nav>
   );
 }

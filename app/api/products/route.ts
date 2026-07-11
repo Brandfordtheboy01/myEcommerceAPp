@@ -65,11 +65,18 @@ export async function POST(request: Request) {
   }
 
   if (image_url) {
-    await supabase.from("product_images").insert({
+    const { error: imageError } = await supabase.from("product_images").insert({
       product_id: product.id,
       image_url,
       is_primary: true,
     });
+
+    if (imageError) {
+      console.error("Failed to insert product image:", imageError);
+      // Optionally delete the product if image insertion fails
+      await supabase.from("products").delete().eq("id", product.id);
+      return NextResponse.json({ error: "Failed to associate image with product" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ product }, { status: 201 });

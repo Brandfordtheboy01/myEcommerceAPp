@@ -139,6 +139,17 @@
   }
 }
 
+@layer components {
+  @keyframes marqueeScroll {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

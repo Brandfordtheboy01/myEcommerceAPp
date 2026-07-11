@@ -71,6 +71,56 @@ MVP functionality is done on `mvp/marketplace-build`. Current work is a full UI/
 - [x] Vendor/admin — sidebar dashboard nav via `layout.tsx`, stat cards with icons, loading skeletons
 
 ## Recent Implementations (July 2026)
+- [x] **Hero Section Redesign** (`components/layout/hero-section.tsx`)
+  - Updated main hero card to use static image `ecimg1.jpg` from `/public/assets`
+  - Added gradient overlays for text readability
+  - Updated side cards to use `ecimg2.jpg` with gradient overlays
+  - Changed text colors to white for better contrast
+  - Updated heading to "Gadgets you'll love. Prices you'll trust."
+  - Added backdrop blur effects to decorative elements
+- [x] **Header Sticky Positioning** (`components/layout/header.tsx`)
+  - Added `sticky top-0 z-50` for scroll-based positioning
+  - Added `bg-white/80 backdrop-blur-md` for frosted glass effect when scrolling
+  - Header now stays visible with blur effect during page scroll
+- [x] **Products Page Creation** (`app/products/page.tsx`)
+  - Created dedicated `/products` page for full product catalog
+  - Integrated left sidebar filter component with:
+    - Sort options (newest, price low-high, price high-low, name A-Z, name Z-A)
+    - Category checkboxes for multi-selection
+    - Price range inputs (min/max)
+    - Clear all and apply filters buttons
+  - Added filter logic to database query (search, category, price range, sort)
+  - Responsive layout with sticky filter sidebar
+- [x] **Product Filter Component** (`components/products/product-filter.tsx`)
+  - Client-side filter component with URL parameter management
+  - Supports multiple category selection
+  - Price range filtering with validation
+  - Dynamic sort options
+  - Clear filters functionality
+- [x] **Product Recommendation Feature** (`components/products/product-recommendations.tsx`)
+  - Created recommendation component for product detail pages
+  - Shows "More from this vendor" section (up to 4 products from same vendor)
+  - Shows "Similar products you might like" section (up to 4 products from other vendors in same category)
+  - Excludes current product from recommendations
+  - Includes review ratings and counts for all recommended products
+- [x] **Next.js Image Configuration** (`next.config.ts`)
+  - Added remote image patterns for Supabase storage domains
+  - Configured to allow images from `**.supabase.co` domains
+  - Fixed image display issues on storefront
+- [x] **Product Images RLS Policy Fix**
+  - Identified RLS policy blocking `product_images` table insertions
+  - Provided SQL commands to create proper RLS policies:
+    - Allow authenticated users to insert product images
+    - Allow public read access to product images
+    - Allow users to update/delete their own product images
+  - Added error handling to product creation API for image insertion failures
+- [x] **Latest Products Section Redesign** (`app/page.tsx`)
+  - Updated header with larger, bolder typography (text-3xl font-bold)
+  - Added descriptive subtitle "Discover our newest arrivals from trusted vendors"
+  - Added gradient product count badge (green to emerald gradient)
+  - Improved search results display with blue badge styling
+  - Changed product grid from flex layout to proper responsive grid (grid-cols-2 sm:grid-cols-3 lg:grid-cols-4)
+  - Enhanced visual hierarchy and spacing
 - [x] **Vendor Management Page Redesign** (`app/admin/vendors/page.tsx`)
   - Changed from modal popup to collapsible dropdown view for better UX
   - Added comprehensive vendor detail view with all schema fields:

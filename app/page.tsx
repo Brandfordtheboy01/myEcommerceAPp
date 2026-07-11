@@ -5,6 +5,8 @@ import { ProductSearch } from "@/components/products/product-search";
 import { CategoryFilter } from "@/components/products/category-filter";
 import { Container } from "@/components/layout/container";
 import { EmptyState } from "@/components/layout/empty-state";
+import { HeroSection } from "@/components/layout/hero-section";
+import { CategoriesMarquee } from "@/components/layout/categories-marquee";
 import { PackageSearch } from "lucide-react";
 import type { Product, ProductReviewStats } from "@/types/database";
 
@@ -46,25 +48,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <>
-      <section className="gradient-hero border-b min-h-[100vh] flex items-center">
-        <Container className="py-12 sm:py-16">
-          <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl">
-              Discover products from trusted vendors
-            </h1>
-            <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-              One marketplace, endless choices. Shop securely and track every order.
-            </p>
-          </div>
-          <div className="mx-auto mt-8 max-w-xl">
-            <Suspense fallback={<div className="h-11 animate-pulse rounded-lg bg-muted" />}>
-              <ProductSearch defaultValue={search ?? ""} />
-            </Suspense>
-          </div>
-        </Container>
-      </section>
+      <HeroSection />
+      <CategoriesMarquee />
 
       <Container className="py-10">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-slate-900">Latest Products</h2>
+            <p className="text-sm text-slate-600 mt-2">
+              Discover our newest arrivals from trusted vendors
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+              {products?.length ?? 0} Products
+            </div>
+          </div>
+        </div>
+
         {categories && categories.length > 0 && (
           <div className="mb-8">
             <Suspense fallback={null}>
@@ -74,10 +75,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         )}
 
         {(search || category) && (
-          <p className="mb-6 text-sm text-muted-foreground">
-            {products?.length ?? 0} result{(products?.length ?? 0) !== 1 ? "s" : ""}
-            {search && <> for &ldquo;{search}&rdquo;</>}
-          </p>
+          <div className="mb-6 flex items-center gap-2">
+            <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+              {products?.length ?? 0} result{(products?.length ?? 0) !== 1 ? "s" : ""}
+            </div>
+            {search && (
+              <span className="text-sm text-muted-foreground">
+                for &ldquo;{search}&rdquo;
+              </span>
+            )}
+          </div>
         )}
 
         {!products?.length ? (
@@ -93,7 +100,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             actionHref={search || category ? "/" : undefined}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {(products as Product[]).map((product) => {
               const stats = reviewStats[product.id];
               return (
