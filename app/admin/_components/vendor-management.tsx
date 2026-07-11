@@ -57,7 +57,7 @@ export function VendorManagement({ initialVendors }: VendorManagementProps) {
   const filteredVendors = vendors.filter((vendor) => {
     const matchesSearch =
       vendor.business_name.toLowerCase().includes(search.toLowerCase()) ||
-      vendor.business_email.toLowerCase().includes(search.toLowerCase());
+      (vendor.business_email?.toLowerCase().includes(search.toLowerCase()) ?? false);
 
     const matchesStatus =
       activeFilter === "All" || vendor.status.toLowerCase() === activeFilter.toLowerCase();
