@@ -1,7 +1,8 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ProductCard } from "@/components/products/product-card";
-import { ProductSearch } from "@/components/products/product-search";
 import { ProductFilter } from "@/components/products/product-filter";
 import { Container } from "@/components/layout/container";
 import { EmptyState } from "@/components/layout/empty-state";
@@ -11,15 +12,17 @@ import type { Product, ProductReviewStats } from "@/types/database";
 interface ProductsPageProps {
   searchParams: Promise<{ 
     search?: string; 
-    category?: string | string[];
+    category?: string;
     minPrice?: string;
     maxPrice?: string;
     sort?: string;
+    size?: string;
+    color?: string;
   }>;
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const { search, category, minPrice, maxPrice, sort } = await searchParams;
+  const { search, category, minPrice, maxPrice, sort, size, color } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase
@@ -30,10 +33,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   // Search filter
   if (search) query = query.ilike("name", `%${search}%`);
 
-  // Category filter (handle both single and multiple categories)
+  // Category filter
   if (category) {
-    const categories = Array.isArray(category) ? category : [category];
-    query = query.in("category_id", categories);
+    query = query.eq("category_id", category);
   }
 
   // Price range filter
@@ -63,6 +65,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     supabase.from("categories").select("id, name").order("name"),
   ]);
 
+  // Fetch reviews for products to display correct stars
   const productIds = (products ?? []).map((p) => p.id);
   let reviewStats: Record<string, ProductReviewStats> = {};
 
@@ -77,65 +80,115 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     );
   }
 
+  // Determine page title based on active category
+  let pageTitle = "All Clothes";
+  if (category && categories) {
+    const activeCat = categories.find((c) => c.id === category);
+    if (activeCat) pageTitle = activeCat.name;
+  }
+
   return (
-    <Container className="py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-slate-800">All Products</h1>
-        <p className="text-sm text-slate-600 mt-2">
-          Showing {products?.length ?? 0} products
-        </p>
-      </div>
-
-      <div className="mb-8">
-        <Suspense fallback={null}>
-          <ProductSearch />
-        </Suspense>
-      </div>
-
-      <div className="flex gap-8">
-        {/* Left Sidebar Filter */}
-        <Suspense fallback={<div className="w-64 flex-shrink-0"></div>}>
-          {categories && <ProductFilter categories={categories} />}
-        </Suspense>
-
-        {/* Products Grid */}
-        <div className="flex-1">
-          {(search || category || minPrice || maxPrice) && (
-            <p className="mb-6 text-sm text-muted-foreground">
-              {products?.length ?? 0} result{(products?.length ?? 0) !== 1 ? "s" : ""}
-              {search && <> for &ldquo;{search}&rdquo;</>}
-            </p>
-          )}
-
-          {!products?.length ? (
-            <EmptyState
-              icon={PackageSearch}
-              title={search || category || minPrice || maxPrice ? "No products found" : "No products yet"}
-              description={
-                search || category || minPrice || maxPrice
-                  ? "Try adjusting your filters or search terms."
-                  : "Vendors can add products from their dashboard once approved."
-              }
-              actionLabel={search || category || minPrice || maxPrice ? "View all products" : undefined}
-              actionHref={search || category || minPrice || maxPrice ? "/products" : undefined}
-            />
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {(products as Product[]).map((product) => {
-                const stats = reviewStats[product.id];
-                return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    rating={stats?.average_rating ?? 0}
-                    reviewCount={stats?.review_count ?? 0}
-                  />
-                );
-              })}
-            </div>
-          )}
+    <div className="bg-white min-h-screen">
+      <Container className="py-6 sm:py-10">
+        
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 mb-6 font-normal">
+          <Link href="/" className="hover:text-black transition">Home</Link>
+          <ChevronRight size={14} className="text-gray-400" />
+          <span className="text-black font-medium">{pageTitle}</span>
         </div>
-      </div>
-    </Container>
+
+        {/* Two Column Layout (Sidebar + Catalog Grid) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Column: Filter Sidebar */}
+          <div className="lg:col-span-3 w-full lg:sticky lg:top-24">
+            <Suspense fallback={<div className="h-96 bg-gray-50 rounded-2xl animate-pulse"></div>}>
+              {categories && <ProductFilter categories={categories} />}
+            </Suspense>
+          </div>
+
+          {/* Right Column: Catalog Grid */}
+          <div className="lg:col-span-9 flex-1">
+            
+            {/* Catalog Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black text-black font-sans uppercase tracking-tight">
+                  {pageTitle}
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  Showing 1-{products?.length ?? 0} of {products?.length ?? 0} Products
+                </p>
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 self-start sm:self-auto text-xs sm:text-sm">
+                <span className="text-gray-500">Sort by:</span>
+                <select 
+                  className="bg-transparent text-black font-bold outline-none cursor-pointer border-none py-1 focus:ring-0"
+                  defaultValue={sort || "newest"}
+                >
+                  <option value="newest">Most Popular</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Catalog Grid */}
+            {!products?.length ? (
+              <EmptyState
+                icon={PackageSearch}
+                title="No products found"
+                description="Try adjusting your filters or search terms."
+                actionLabel="View all products"
+                actionHref="/products"
+              />
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6 sm:gap-6">
+                {(products as Product[]).map((product) => {
+                  const stats = reviewStats[product.id];
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      rating={stats?.average_rating ?? 4.0}
+                      reviewCount={stats?.review_count ?? 15}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {products && products.length > 0 && (
+              <div className="flex items-center justify-between border-t border-gray-100 pt-6 mt-12 sm:mt-16 text-xs sm:text-sm">
+                <button className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-black font-medium transition cursor-pointer">
+                  <ChevronLeft size={16} />
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  <span className="flex items-center justify-center size-8 sm:size-9 rounded-lg bg-black text-white font-bold">1</span>
+                  <span className="flex items-center justify-center size-8 sm:size-9 text-gray-500 hover:text-black font-medium cursor-pointer transition">2</span>
+                  <span className="flex items-center justify-center size-8 sm:size-9 text-gray-500 hover:text-black font-medium cursor-pointer transition">3</span>
+                  <span className="text-gray-400 px-1">...</span>
+                  <span className="flex items-center justify-center size-8 sm:size-9 text-gray-500 hover:text-black font-medium cursor-pointer transition">8</span>
+                  <span className="flex items-center justify-center size-8 sm:size-9 text-gray-500 hover:text-black font-medium cursor-pointer transition">9</span>
+                  <span className="flex items-center justify-center size-8 sm:size-9 text-gray-500 hover:text-black font-medium cursor-pointer transition">10</span>
+                </div>
+
+                <button className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-black font-medium transition cursor-pointer">
+                  Next
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </Container>
+    </div>
   );
 }

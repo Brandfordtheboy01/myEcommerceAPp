@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import { Lock, Tag, Truck, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Lock, Tag, Truck, ChevronRight, MapPin, Mail, User, Phone, Building } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/layout/empty-state";
 import { useCartStore } from "@/store/cart-store";
 import { formatCurrency, toPesewas } from "@/lib/utils/format";
@@ -77,7 +74,8 @@ export default function CheckoutPage() {
   });
 
   const subtotal = getTotal();
-  const total = subtotal - couponDiscount;
+  const deliveryFee = subtotal > 0 ? 15 : 0;
+  const total = subtotal - couponDiscount + deliveryFee;
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "";
 
   async function applyCoupon() {
@@ -204,135 +202,273 @@ export default function CheckoutPage() {
   }
 
   return (
-    <Container className="py-8 sm:py-10">
-      <div className="mb-6">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link href="/cart">
-            <ArrowLeft className="size-4" />
-            Back to cart
-          </Link>
-        </Button>
+    <div className="mx-auto max-w-[1240px] px-4 py-6 md:py-10">
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 mb-6 font-normal">
+        <Link href="/" className="hover:text-black transition">Home</Link>
+        <ChevronRight size={14} className="text-gray-400" />
+        <Link href="/cart" className="hover:text-black transition">Cart</Link>
+        <ChevronRight size={14} className="text-gray-400" />
+        <span className="text-black font-medium">Checkout</span>
       </div>
 
-      <PageHeader
-        title="Checkout"
-        description="Complete your order with secure payment"
-      />
+      {/* Page Title */}
+      <h1 className="text-3xl md:text-[40px] font-black uppercase tracking-tight text-black mb-8 md:mb-10">
+        Checkout
+      </h1>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
+      <div className="grid gap-8 lg:grid-cols-[1fr_440px] lg:items-start">
+        {/* Left Column — Forms */}
         <div className="space-y-6">
-          <section className="rounded-2xl border bg-card p-6 shadow-card">
-            <div className="mb-5 flex items-center gap-2">
-              <Truck className="size-5 text-primary" />
-              <h2 className="text-lg font-semibold">Shipping details</h2>
+          {/* Shipping Details Card */}
+          <div className="border border-gray-100 rounded-[20px] p-5 md:p-7 bg-white">
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="flex items-center justify-center size-9 rounded-full bg-[#F0F0F0]">
+                <Truck size={16} className="text-black" />
+              </div>
+              <h2 className="text-lg font-bold text-black">Shipping Details</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="fullname">Full name</Label>
-                <Input id="fullname" value={address.fullname} onChange={(e) => setAddress({ ...address, fullname: e.target.value })} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} required />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="street">Street address</Label>
-                <Input id="street" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                <Input id="state" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Input id="country" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} required />
-              </div>
-            </div>
-          </section>
 
-          <section className="rounded-2xl border bg-card p-6 shadow-card">
-            <div className="mb-5 flex items-center gap-2">
-              <Tag className="size-5 text-primary" />
-              <h2 className="text-lg font-semibold">Coupon code</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Email — full width */}
+              <div className="sm:col-span-2">
+                <label htmlFor="email" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Email
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <Mail size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Full Name — full width */}
+              <div className="sm:col-span-2">
+                <label htmlFor="fullname" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Full Name
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <User size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="fullname"
+                    value={address.fullname}
+                    onChange={(e) => setAddress({ ...address, fullname: e.target.value })}
+                    placeholder="John Doe"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label htmlFor="phone" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Phone
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <Phone size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="phone"
+                    value={address.phone}
+                    onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                    placeholder="+233 123 456 789"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* City */}
+              <div>
+                <label htmlFor="city" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  City
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <Building size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="city"
+                    value={address.city}
+                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                    placeholder="Accra"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Street — full width */}
+              <div className="sm:col-span-2">
+                <label htmlFor="street" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Street Address
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <MapPin size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="street"
+                    value={address.street}
+                    onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                    placeholder="123 Main Street"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* State */}
+              <div>
+                <label htmlFor="state" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  State / Region
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <MapPin size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="state"
+                    value={address.state}
+                    onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                    placeholder="Greater Accra"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Country */}
+              <div>
+                <label htmlFor="country" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Country
+                </label>
+                <div className="flex items-center gap-3 bg-[#F0F0F0] rounded-full px-4 py-3 focus-within:ring-1 focus-within:ring-black transition">
+                  <Building size={16} className="text-gray-400 shrink-0" />
+                  <input
+                    id="country"
+                    value={address.country}
+                    onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                    placeholder="Ghana"
+                    required
+                    className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter code"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              />
-              <Button onClick={applyCoupon} disabled={!couponCode.trim()} variant="secondary">
+          </div>
+
+          {/* Coupon Card */}
+          <div className="border border-gray-100 rounded-[20px] p-5 md:p-7 bg-white">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="flex items-center justify-center size-9 rounded-full bg-[#F0F0F0]">
+                <Tag size={16} className="text-black" />
+              </div>
+              <h2 className="text-lg font-bold text-black">Coupon Code</h2>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex items-center gap-2 bg-[#F0F0F0] rounded-full px-4 py-3 flex-1 focus-within:ring-1 focus-within:ring-black transition">
+                <Tag size={16} className="text-gray-400 shrink-0" />
+                <input
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="bg-transparent border-0 w-full p-0 text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400 text-black font-medium"
+                />
+              </div>
+              <button
+                onClick={applyCoupon}
+                disabled={!couponCode.trim()}
+                className="bg-black hover:bg-black/90 active:scale-95 text-white font-bold text-sm px-7 py-3 rounded-full transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
                 Apply
-              </Button>
+              </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2.5 text-xs text-gray-400">
               Applies to products from that vendor only
             </p>
-            {couponError && <p className="mt-2 text-sm text-destructive">{couponError}</p>}
+            {couponError && <p className="mt-2 text-sm text-red-500 font-medium">{couponError}</p>}
             {couponDiscount > 0 && (
-              <p className="mt-2 text-sm text-success">
-                Coupon applied{couponVendorName ? ` for ${couponVendorName}` : ""} — you saved {formatCurrency(couponDiscount)}
+              <p className="mt-2 text-sm text-green-600 font-medium">
+                ✓ Coupon applied{couponVendorName ? ` for ${couponVendorName}` : ""} — you saved {formatCurrency(couponDiscount)}
               </p>
             )}
-          </section>
+          </div>
         </div>
 
-        <aside className="rounded-2xl border bg-card p-6 shadow-card lg:sticky lg:top-24">
-          <h2 className="text-lg font-semibold">Order summary</h2>
+        {/* Right Column — Order Summary */}
+        <aside className="border border-gray-100 rounded-[20px] p-5 md:p-7 bg-white lg:sticky lg:top-24">
+          <h2 className="text-xl md:text-2xl font-bold text-black mb-6">Order Summary</h2>
 
-          <ul className="mt-4 space-y-3">
+          {/* Items List */}
+          <div className="space-y-4 mb-6">
             {items.map((i) => (
-              <li key={i.productId} className="flex justify-between gap-4 text-sm">
-                <span className="line-clamp-1 text-muted-foreground">
-                  {i.name} <span className="text-foreground">× {i.quantity}</span>
-                </span>
-                <span className="shrink-0 font-medium">{formatCurrency(i.price * i.quantity)}</span>
-              </li>
+              <div key={i.productId} className="flex items-center gap-3">
+                <div className="relative size-14 bg-[#F0F0F0] rounded-[10px] overflow-hidden shrink-0 flex items-center justify-center">
+                  {i.imageUrl ? (
+                    <Image src={i.imageUrl} alt={i.name} fill className="object-contain p-1" unoptimized />
+                  ) : (
+                    <div className="text-[8px] text-gray-400">No img</div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-black line-clamp-1">{i.name}</p>
+                  <p className="text-xs text-gray-400">× {i.quantity}</p>
+                </div>
+                <span className="text-sm font-bold text-black shrink-0">{formatCurrency(i.price * i.quantity)}</span>
+              </div>
             ))}
-          </ul>
+          </div>
 
-          <div className="my-4 border-t" />
+          <div className="border-t border-gray-100 my-5" />
 
-          <dl className="space-y-2 text-sm">
+          {/* Summary Figures */}
+          <div className="space-y-4 text-sm sm:text-base">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Subtotal</dt>
-              <dd>{formatCurrency(subtotal)}</dd>
+              <span className="text-gray-500">Subtotal</span>
+              <span className="font-bold text-black">{formatCurrency(subtotal)}</span>
             </div>
             {couponDiscount > 0 && (
-              <div className="flex justify-between text-success">
-                <dt>Discount</dt>
-                <dd>-{formatCurrency(couponDiscount)}</dd>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Coupon Discount</span>
+                <span className="font-bold text-red-500">-{formatCurrency(couponDiscount)}</span>
               </div>
             )}
-          </dl>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Delivery Fee</span>
+              <span className="font-bold text-black">{formatCurrency(deliveryFee)}</span>
+            </div>
+          </div>
 
-          <div className="my-4 border-t" />
+          <div className="border-t border-gray-100 my-5" />
 
-          <div className="flex justify-between text-lg font-semibold">
+          <div className="flex justify-between text-lg md:text-xl font-bold text-black mb-6">
             <span>Total</span>
             <span>{formatCurrency(total)}</span>
           </div>
 
-          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-[15px] px-4 py-3 mb-4">
+              {error}
+            </div>
+          )}
 
-          <Button className="mt-6 w-full" size="lg" onClick={handlePay} disabled={loading}>
-            <Lock className="size-4" />
+          {/* Pay CTA */}
+          <button
+            onClick={handlePay}
+            disabled={loading}
+            className="w-full bg-black hover:bg-black/90 active:scale-[0.98] text-white font-bold py-4 rounded-full flex items-center justify-center gap-2.5 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <Lock size={16} className="stroke-[2.5px]" />
             {loading ? "Processing..." : `Pay ${formatCurrency(total)}`}
-          </Button>
+          </button>
 
-          <p className="mt-4 text-center text-xs text-muted-foreground">
+          <p className="mt-4 text-center text-xs text-gray-400">
             Payments secured by Paystack
           </p>
         </aside>
       </div>
-    </Container>
+    </div>
   );
 }

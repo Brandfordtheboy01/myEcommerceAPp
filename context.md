@@ -151,6 +151,45 @@ MVP functionality is done on `mvp/marketplace-build`. Current work is a full UI/
   - Updated CSS variables to new vibrant color palette (Electric Blue, Neon Green, Deep Navy, Crisp White)
   - Applied to both light and dark modes in `app/globals.css`
 
+## SHOP.CO UI Overhaul (July 11, 2026)
+Full visual redesign of customer-facing pages to match premium SHOP.CO e-commerce template:
+- [x] **Product Detail Page** (`components/products/product-detail-layout.tsx`, `app/products/[id]/page.tsx`)
+  - New client component `ProductDetailLayout` handling all interactive states
+  - Vertical thumbnail gallery on desktop, horizontal on mobile with border-selected state
+  - Interactive color picker with checkmark overlay on dark circles (Olive, Forest, Navy)
+  - Pill-shaped size selector (Small, Medium, Large, X-Large) with black active state
+  - Rounded quantity controls (`-`/`+`) with pill background
+  - Full-width rounded "Add to Cart" button with added feedback
+  - Tabbed section (Product Details, Rating & Reviews, FAQs) with underline active state
+  - Review cards in 2-column grid with green verified badges, star ratings, timestamps
+  - "Write a Review" modal with star picker and textarea
+  - "You Might Also Like" section with 4-column product card grid
+  - Breadcrumbs navigation (Home > Shop > Category > Product Name)
+- [x] **Cart Page** (`app/cart/page.tsx`)
+  - Breadcrumbs (Home > Cart), uppercase "YOUR CART" header
+  - Item cards with gray rounded product images, size/color attributes, red trash icons
+  - Pill quantity selectors matching product detail style
+  - Order Summary with subtotal, 20% discount (red), $15 delivery fee, total
+  - Promo code input with tag icon and pill "Apply" button
+  - Black pill "Go to Checkout →" CTA
+- [x] **Cart Sheet** (`components/cart/cart-sheet.tsx`)
+  - Slide-out panel restyled with gray rounded product thumbnails
+  - Pill quantity controls, red trash delete buttons
+  - Clean footer with subtotal, pill checkout + view full cart buttons
+  - Size/color mock attributes per item
+- [x] **Checkout Page** (`app/checkout/page.tsx`)
+  - Breadcrumbs (Home > Cart > Checkout), uppercase header
+  - Shipping form with pill inputs (icon + input in `#F0F0F0` rounded containers)
+  - Coupon card with pill input and Apply button
+  - Order summary sidebar with product thumbnails, subtotal/discount/delivery/total
+  - Black pill Pay CTA with lock icon
+- [x] **Auth Pages** (`components/layout/auth-shell.tsx`, `app/(auth)/login/login-form.tsx`, `app/(auth)/register/page.tsx`)
+  - Auth shell: black branded left panel with SHOP.CO logo, tagline, stats (200+/2000+/30000+), decorative circles
+  - White right panel with pill inputs (icon prefixed, `#F0F0F0` background, rounded-full)
+  - Password visibility toggle (eye/eye-off icon)
+  - Black pill submit buttons, "or" divider, inter-page links
+  - Register: black/white role selector cards (Shop/Sell) with icons
+
 ## Remaining (UI redesign)
 - [x] Run full build + visual smoke-test (`npm run build && npm run dev`)
 - [x] Vendor register page — apply new `AuthShell` styling
@@ -197,8 +236,9 @@ ecommerce/
 │   ├── plan/note.txt   (updated build plan v2.0)
 │   └── api/...
 ├── components/
+│   ├── cart/            cart-sheet (slide-out cart panel)
 │   ├── layout/         container, page-header, empty-state, auth-shell, dashboard-nav, header, footer
-│   ├── products/       product-card, product-search, category-filter, add-to-cart-button, product-reviews
+│   ├── products/       product-card, product-detail-layout, product-search, category-filter, add-to-cart-button, product-reviews, product-recommendations
 │   └── ui/             shadcn components
 ├── lib/supabase, validations, orders, logger
 ├── store/cart-store.ts

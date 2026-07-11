@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Serif_Display, Geist_Mono } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PromotionalBanner } from "@/components/layout/promotional-banner";
 import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -35,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <PromotionalBanner />
         <Header />

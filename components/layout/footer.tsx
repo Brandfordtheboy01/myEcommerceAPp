@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail } from "lucide-react";
 
 interface LinkItem {
   text: string;
   path: string;
-  icon?: React.ComponentType;
 }
 
 interface LinkSection {
@@ -17,65 +16,69 @@ interface LinkSection {
 
 const linkSections: LinkSection[] = [
   {
-    title: "PRODUCTS",
+    title: "COMPANY",
     links: [
-      { text: "Electronics", path: '/products' },
-      { text: "Smartphones", path: '/products' },
-      { text: "Accessories", path: '/products' },
-      { text: "Wearables", path: '/products' },
+      { text: "About", path: "/products" },
+      { text: "Features", path: "/products" },
+      { text: "Works", path: "/products" },
+      { text: "Career", path: "/products" },
     ]
   },
   {
-    title: "WEBSITE",
+    title: "HELP",
     links: [
-      { text: "Home", path: '/' },
-      { text: "About Us", path: '/' },
-      { text: "Become a Vendor", path: '/vendor-register' },
-      { text: "Contact", path: '/' },
+      { text: "Customer Support", path: "/products" },
+      { text: "Delivery Details", path: "/products" },
+      { text: "Terms & Conditions", path: "/products" },
+      { text: "Privacy Policy", path: "/products" },
     ]
   },
   {
-    title: "CONTACT",
+    title: "FAQ",
     links: [
-      { text: "+1-212-456-7890", path: '/', icon: Phone },
-      { text: "contact@example.com", path: '/', icon: Mail },
-      { text: "794 Francisco, 94102", path: '/', icon: MapPin }
+      { text: "Account", path: "/products" },
+      { text: "Manage Deliveries", path: "/products" },
+      { text: "Orders", path: "/products" },
+      { text: "Payments", path: "/products" },
+    ]
+  },
+  {
+    title: "RESOURCES",
+    links: [
+      { text: "Free eBooks", path: "/products" },
+      { text: "Development Tutorial", path: "/products" },
+      { text: "How to - Blog", path: "/products" },
+      { text: "Youtube Playlist", path: "/products" },
     ]
   }
 ];
 
+// Custom inline SVGs for social media links to avoid version mismatch in lucide-react
+const TwitterIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+  </svg>
+);
+
 const FacebookIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.9987 1.66699H12.4987C11.3936 1.66699 10.3338 2.10598 9.55242 2.88738C8.77102 3.66878 8.33203 4.72859 8.33203 5.83366V8.33366H5.83203V11.667H8.33203V18.3337H11.6654V11.667H14.1654L14.9987 8.33366H11.6654V5.83366C11.6654 5.61265 11.7532 5.40068 11.9094 5.2444C12.0657 5.08812 12.2777 5.00033 12.4987 5.00033H14.9987V1.66699Z" stroke="#90A1B9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
   </svg>
 );
 
 const InstagramIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.5846 5.41699H14.593M5.83464 1.66699H14.168C16.4692 1.66699 18.3346 3.53247 18.3346 5.83366V14.167C18.3346 16.4682 16.4692 18.3337 14.168 18.3337H5.83464C3.53345 18.3337 1.66797 16.4682 1.66797 14.167V5.83366C1.66797 3.53247 3.53345 1.66699 5.83464 1.66699ZM13.3346 9.47533C13.4375 10.1689 13.319 10.8772 12.9961 11.4995C12.6732 12.1218 12.1623 12.6265 11.536 12.9417C10.9097 13.2569 10.2 13.3667 9.50779 13.2553C8.81557 13.1439 8.1761 12.8171 7.68033 12.3213C7.18457 11.8255 6.85775 11.1861 6.74636 10.4938C6.63497 9.80162 6.74469 9.0919 7.05991 8.46564C7.37512 7.83937 7.87979 7.32844 8.50212 7.00553C9.12445 6.68261 9.83276 6.56415 10.5263 6.66699C11.2337 6.7719 11.8887 7.10154 12.3944 7.60725C12.9001 8.11295 13.2297 8.76789 13.3346 9.47533Z" stroke="#90A1B9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
   </svg>
 );
 
-const TwitterIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18.3346 3.33368C18.3346 3.33368 17.7513 5.08368 16.668 6.16701C18.0013 14.5003 8.83464 20.5837 1.66797 15.8337C3.5013 15.917 5.33464 15.3337 6.66797 14.167C2.5013 12.917 0.417969 8.00034 2.5013 4.16701C4.33464 6.33368 7.16797 7.58368 10.0013 7.50034C9.2513 4.00034 13.3346 2.00034 15.8346 4.33368C16.7513 4.33368 18.3346 3.33368 18.3346 3.33368Z" stroke="#90A1B9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+const GithubIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
   </svg>
 );
-
-const LinkedinIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13.3346 6.66699C14.6607 6.66699 15.9325 7.19378 16.8702 8.13146C17.8079 9.06914 18.3346 10.3409 18.3346 11.667V17.5003H15.0013V11.667C15.0013 11.225 14.8257 10.801 14.5131 10.4885C14.2006 10.1759 13.7767 10.0003 13.3346 10.0003C12.8926 10.0003 12.4687 10.1759 12.1561 10.4885C11.8436 10.801 11.668 11.225 11.668 11.667V17.5003H8.33464V11.667C8.33464 10.3409 8.86142 9.06914 9.7991 8.13146C10.7368 7.19378 12.0086 6.66699 13.3346 6.66699Z" stroke="#90A1B9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M5.0013 7.50033H1.66797V17.5003H5.0013V7.50033Z" stroke="#90A1B9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3.33464 5.00033C4.25511 5.00033 5.0013 4.25413 5.0013 3.33366C5.0013 2.41318 4.25511 1.66699 3.33464 1.66699C2.41416 1.66699 1.66797 2.41318 1.66797 3.33366C1.66797 4.25413 2.41416 5.00033 3.33464 5.00033Z" stroke="#90A1B9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const socialIcons = [
-  { icon: FacebookIcon, link: "https://www.facebook.com" },
-  { icon: InstagramIcon, link: "https://www.instagram.com" },
-  { icon: TwitterIcon, link: "https://twitter.com" },
-  { icon: LinkedinIcon, link: "https://www.linkedin.com" },
-]
 
 export function Footer() {
   const pathname = usePathname();
@@ -83,31 +86,73 @@ export function Footer() {
   if (isDashboard) return null;
 
   return (
-    <footer className="mx-6 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30 text-slate-500">
-          <div>
-            <Link href="/" className="text-4xl font-semibold text-slate-700">
-              <span className="text-green-600">go</span>cart<span className="text-green-600 text-5xl leading-0">.</span>
+    <footer className="relative mt-32 bg-[#F0F0F0]">
+      {/* Overlapping Newsletter Subscription Box */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -translate-y-1/2 z-10 -mb-24">
+        <div className="bg-black rounded-3xl px-6 py-9 sm:px-16 sm:py-11 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-10">
+          <h2 className="text-white text-3xl sm:text-4xl font-black tracking-tight leading-none max-w-xl text-left">
+            STAY UP TO DATE ABOUT OUR LATEST OFFERS
+          </h2>
+          <div className="flex flex-col gap-3 w-full max-w-md sm:max-w-xs shrink-0">
+            <div className="relative w-full">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 size-5" />
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                className="w-full bg-white text-black pl-12 pr-4 py-3 rounded-full text-sm outline-none border-none placeholder-gray-400 focus:ring-1 focus:ring-black"
+              />
+            </div>
+            <button
+              type="button"
+              className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 px-6 rounded-full text-sm transition-all"
+            >
+              Subscribe to Newsletter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Links Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-8 md:gap-12 pb-12 border-b border-gray-200">
+          {/* Column 1: Brand details */}
+          <div className="col-span-2 md:col-span-4 flex flex-col gap-6">
+            <Link href="/" className="text-3xl font-black text-black tracking-tight font-sans">
+              SHOP.CO
             </Link>
-            <p className="max-w-[410px] mt-6 text-sm">Welcome to gocart, your ultimate destination for the latest and smartest gadgets. From smartphones and smartwatches to essential accessories, we bring you the best in innovation — all in one place.</p>
-            <div className="flex items-center gap-3 mt-5">
-              {socialIcons.map((item, i) => (
-                <Link href={item.link} key={i} className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:scale-105 hover:border border-slate-300 transition rounded-full">
-                  <item.icon />
-                </Link>
-              ))}
+            <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+              We have clothes that suits your style and which you're proud to wear. From women to men.
+            </p>
+            {/* Social Icons */}
+            <div className="flex items-center gap-3">
+              <a href="#" className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white hover:bg-black hover:text-white transition text-black" aria-label="Twitter">
+                <TwitterIcon />
+              </a>
+              <a href="#" className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white hover:bg-black hover:text-white transition text-black" aria-label="Facebook">
+                <FacebookIcon />
+              </a>
+              <a href="#" className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white hover:bg-black hover:text-white transition text-black" aria-label="Instagram">
+                <InstagramIcon />
+              </a>
+              <a href="#" className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white hover:bg-black hover:text-white transition text-black" aria-label="Github">
+                <GithubIcon />
+              </a>
             </div>
           </div>
-          <div className="flex flex-wrap justify-between w-full md:w-[45%] gap-5 text-sm">
+
+          {/* Columns 2-5: Link sections */}
+          <div className="col-span-2 md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
             {linkSections.map((section, index) => (
-              <div key={index}>
-                <h3 className="font-medium text-slate-700 md:mb-5 mb-3">{section.title}</h3>
-                <ul className="space-y-2.5">
+              <div key={index} className="flex flex-col gap-4">
+                <h3 className="text-sm font-semibold tracking-widest text-black uppercase">
+                  {section.title}
+                </h3>
+                <ul className="flex flex-col gap-3">
                   {section.links.map((link, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      {link.icon && <link.icon />}
-                      <Link href={link.path} className="hover:underline transition">{link.text}</Link>
+                    <li key={i}>
+                      <Link href={link.path} className="text-gray-500 hover:text-black text-sm transition">
+                        {link.text}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -115,9 +160,38 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <p className="py-4 text-sm text-slate-500 text-center">
-          Copyright {new Date().getFullYear()} © gocart All Right Reserved.
-        </p>
+
+        {/* Bottom Credits & Payment Badges */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8">
+          <p className="text-gray-400 text-xs sm:text-sm text-center sm:text-left">
+            Shop.co © 2000-2023, All Rights Reserved
+          </p>
+          
+          {/* Card Payment Logos */}
+          <div className="flex items-center gap-3">
+            {/* Visa */}
+            <div className="bg-white px-2.5 py-1.5 rounded-md border border-gray-200 shadow-sm flex items-center justify-center h-8 w-12">
+              <span className="text-blue-800 font-extrabold italic text-sm tracking-tighter">VISA</span>
+            </div>
+            {/* Mastercard */}
+            <div className="bg-white px-2.5 py-1.5 rounded-md border border-gray-200 shadow-sm flex items-center justify-center h-8 w-12 gap-0.5">
+              <span className="w-3 h-3 rounded-full bg-red-500 opacity-90 block"></span>
+              <span className="w-3 h-3 rounded-full bg-yellow-500 opacity-90 block -ml-2"></span>
+            </div>
+            {/* Paypal */}
+            <div className="bg-white px-2.5 py-1.5 rounded-md border border-gray-200 shadow-sm flex items-center justify-center h-8 w-12">
+              <span className="text-blue-900 font-black italic text-[11px] tracking-tight">Pay<span className="text-blue-500">Pal</span></span>
+            </div>
+            {/* Apple Pay */}
+            <div className="bg-white px-2.5 py-1.5 rounded-md border border-gray-200 shadow-sm flex items-center justify-center h-8 w-12">
+              <span className="text-black font-semibold text-xs tracking-tight">Pay</span>
+            </div>
+            {/* Google Pay */}
+            <div className="bg-white px-2.5 py-1.5 rounded-md border border-gray-200 shadow-sm flex items-center justify-center h-8 w-12">
+              <span className="text-gray-700 font-bold text-xs tracking-tight">G Pay</span>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );
