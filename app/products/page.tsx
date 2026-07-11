@@ -120,7 +120,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               actionHref={search || category || minPrice || maxPrice ? "/products" : undefined}
             />
           ) : (
-            <div className="grid grid-cols-2 sm:flex flex-wrap gap-6 justify-between">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
               {(products as Product[]).map((product) => {
                 const stats = reviewStats[product.id];
                 return (

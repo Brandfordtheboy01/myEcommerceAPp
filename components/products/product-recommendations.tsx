@@ -29,7 +29,7 @@ export function ProductRecommendations({
             <Store className="w-5 h-5 text-primary" />
             <h2 className="text-2xl font-semibold">More from this vendor</h2>
           </div>
-          <div className="grid grid-cols-2 sm:flex flex-wrap gap-6 justify-between">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {sameVendorProducts.map((product) => {
               const stats = reviewStats[product.id];
               return (
@@ -52,7 +52,7 @@ export function ProductRecommendations({
             <Sparkles className="w-5 h-5 text-primary" />
             <h2 className="text-2xl font-semibold">Similar products you might like</h2>
           </div>
-          <div className="grid grid-cols-2 sm:flex flex-wrap gap-6 justify-between">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {otherVendorProducts.map((product) => {
               const stats = reviewStats[product.id];
               return (

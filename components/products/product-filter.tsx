@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -19,6 +19,7 @@ interface ProductFilterProps {
 export function ProductFilter({ categories }: ProductFilterProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [isPending, startTransition] = useTransition()
   
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     searchParams.get('category') ? [searchParams.get('category')!] : []
@@ -27,15 +28,7 @@ export function ProductFilter({ categories }: ProductFilterProps) {
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest')
 
-  const handleCategoryChange = (categoryId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedCategories([...selectedCategories, categoryId])
-    } else {
-      setSelectedCategories(selectedCategories.filter(id => id !== categoryId))
-    }
-  }
-
-  const applyFilters = () => {
+  const updateFilters = () => {
     const params = new URLSearchParams(searchParams.toString())
     
     // Update categories
@@ -52,7 +45,31 @@ export function ProductFilter({ categories }: ProductFilterProps) {
     // Update sort
     params.set('sort', sortBy)
     
-    router.push(`/products?${params.toString()}`)
+    startTransition(() => {
+      router.push(`/products?${params.toString()}`)
+    })
+  }
+
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    const newCategories = checked
+      ? [...selectedCategories, categoryId]
+      : selectedCategories.filter(id => id !== categoryId)
+    setSelectedCategories(newCategories)
+    updateFilters()
+  }
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value)
+    updateFilters()
+  }
+
+  const handlePriceChange = (field: 'min' | 'max', value: string) => {
+    if (field === 'min') {
+      setMinPrice(value)
+    } else {
+      setMaxPrice(value)
+    }
+    updateFilters()
   }
 
   const clearFilters = () => {
@@ -88,7 +105,7 @@ export function ProductFilter({ categories }: ProductFilterProps) {
         {/* Sort */}
         <div className="mb-6">
           <label className="text-sm font-medium mb-2 block">Sort By</label>
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -136,7 +153,7 @@ export function ProductFilter({ categories }: ProductFilterProps) {
                 type="number"
                 placeholder="Min"
                 value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
+                onChange={(e) => handlePriceChange('min', e.target.value)}
                 className="w-full pl-7 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -147,21 +164,18 @@ export function ProductFilter({ categories }: ProductFilterProps) {
                 type="number"
                 placeholder="Max"
                 value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
+                onChange={(e) => handlePriceChange('max', e.target.value)}
                 className="w-full pl-7 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
         </div>
 
-        {/* Apply Button */}
-        <Button 
-          onClick={applyFilters}
-          className="w-full"
-          disabled={!hasActiveFilters}
-        >
-          Apply Filters
-        </Button>
+        {isPending && (
+          <div className="text-sm text-muted-foreground text-center">
+            Updating...
+          </div>
+        )}
       </div>
     </div>
   )

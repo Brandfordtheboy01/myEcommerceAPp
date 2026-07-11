@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
@@ -14,6 +15,12 @@ interface CartSheetProps {
 }
 
 export function CartSheet({ triggerClassName }: CartSheetProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const items = useCartStore((s) => s.items);
   const itemCount = useCartStore((s) => s.getItemCount());
   const total = useCartStore((s) => s.getTotal());
@@ -26,7 +33,7 @@ export function CartSheet({ triggerClassName }: CartSheetProps) {
         <Button variant="ghost" size="icon" className={triggerClassName} aria-label="Open cart">
           <span className="relative">
             <ShoppingCart className="size-4" />
-            {itemCount > 0 && (
+            {isMounted && itemCount > 0 && (
               <Badge className="absolute -top-1 -right-1 flex size-5 items-center justify-center p-0 text-[10px]">
                 {itemCount > 9 ? "9+" : itemCount}
               </Badge>

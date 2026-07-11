@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Check, ChevronUp } from "lucide-react";
+import { Heart, ShoppingBag, Star, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/store/cart-store";
 import { formatCurrency } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -21,7 +20,6 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
   const addItem = useCartStore((s) => s.addItem);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [added, setAdded] = useState(false);
-  const [showPanel, setShowPanel] = useState(false);
 
   const primaryImage =
     product.product_images?.find((img) => img.is_primary)?.image_url ??
@@ -50,6 +48,7 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (product.stock <= 0) return;
     addItem({
       productId: product.id,
       name: product.name,
@@ -61,116 +60,87 @@ export function ProductCard({ product, rating = 0, reviewCount = 0 }: ProductCar
     setTimeout(() => setAdded(false), 1500);
   }
 
+  const outOfStock = product.stock <= 0;
+
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group block relative w-full h-64 sm:h-96 rounded-2xl overflow-hidden shadow-md ring-1 ring-black/5"
+      className="group flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow duration-200 hover:shadow-lg"
     >
-      {/* Base image layer */}
-      <div className="absolute inset-0 bg-[#F5F5F5]">
+      {/* Image — fixed aspect ratio, object-contain so nothing is ever cropped */}
+      <div className="relative w-full aspect-square bg-slate-50">
         {primaryImage ? (
           <Image
             src={primaryImage}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
             unoptimized
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">
             No image
           </div>
         )}
+
+        {/* Wishlist */}
+        <button
+          onClick={toggleWishlist}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 ring-black/5 transition hover:bg-white"
+        >
+          <Heart
+            size={16}
+            className={cn("transition", isWishlisted ? "text-rose-500" : "text-slate-500")}
+            fill={isWishlisted ? "currentColor" : "none"}
+          />
+        </button>
+
+        {outOfStock && (
+          <span className="absolute top-3 left-3 z-10 rounded-full bg-slate-900/90 px-2.5 py-1 text-[11px] font-medium text-white">
+            Out of stock
+          </span>
+        )}
       </div>
 
-      {/* Subtle top gradient so heart icon stays visible on light images */}
-      <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-
-      {/* Wishlist heart button */}
-      <button
-        onClick={toggleWishlist}
-        className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition hover:bg-white/30"
-      >
-        <Heart
-          size={18}
-          className={cn("transition", isWishlisted ? "text-white" : "text-white/90")}
-          fill={isWishlisted ? "white" : "none"}
-        />
-      </button>
-
-      {/* Mobile reveal button */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowPanel(!showPanel);
-        }}
-        className="sm:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm transition hover:bg-white/40"
-      >
-        <ChevronUp
-          size={20}
-          className={cn("transition text-white", showPanel ? "rotate-180" : "")}
-        />
-      </button>
-
-      {/* Hover info panel */}
-      <div
-        className={cn(
-          "absolute inset-x-0 bottom-0 transition-transform duration-300 ease-out",
-          showPanel ? "translate-y-0" : "translate-y-[68%]",
-          "sm:translate-y-[68%] sm:group-hover:translate-y-0",
-          "bg-black/60 backdrop-blur-md border-t border-white/20",
-          "rounded-2xl px-5 pt-5 pb-5 flex flex-col gap-3"
-        )}
-      >
-        <p className="font-semibold text-white text-base leading-snug line-clamp-1 drop-shadow-sm">
-          {product.name}
-        </p>
+      {/* Content */}
+      <div className="flex flex-1 flex-col gap-1.5 px-4 py-3.5">
+        <p className="line-clamp-1 text-sm font-medium text-slate-900">{product.name}</p>
 
         {(product.size || product.color) && (
-          <div className="flex flex-wrap gap-2">
-            {product.size && (
-              <Badge
-                variant="secondary"
-                className="rounded-full text-xs font-normal bg-white/30 text-white border-white/20 px-3 py-1"
-              >
-                {product.size}
-              </Badge>
-            )}
-            {product.color && (
-              <Badge
-                variant="secondary"
-                className="rounded-full text-xs font-normal bg-white/30 text-white border-white/20 px-3 py-1"
-              >
-                {product.color}
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {product.description && (
-          <p className="text-xs text-white/80 leading-relaxed line-clamp-2">
-            {product.description}
+          <p className="line-clamp-1 text-xs text-slate-500">
+            {[product.size, product.color].filter(Boolean).join(" · ")}
           </p>
         )}
 
-        <div className="flex items-center justify-between pt-2 gap-3">
-          <div className="flex flex-col gap-0.5">
-            <p className="text-[10px] uppercase tracking-wide text-white/70">Price</p>
-            <p className="font-semibold text-white text-lg">{formatCurrency(product.price)}</p>
+        {reviewCount > 0 && (
+          <div className="flex items-center gap-1">
+            <Star size={13} className="fill-amber-400 text-amber-400" />
+            <span className="text-xs text-slate-600">
+              {rating.toFixed(1)}{" "}
+              <span className="text-slate-400">({reviewCount})</span>
+            </span>
           </div>
+        )}
+
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <span className="text-base font-semibold text-slate-900">
+            {formatCurrency(product.price)}
+          </span>
+
           <Button
-            size="sm"
+            size="icon"
+            variant="outline"
+            disabled={outOfStock}
             onClick={handleAddToCart}
-            className="rounded-full bg-white text-slate-900 hover:bg-white/90 px-4"
-          >
-            {added ? (
-              <span className="flex items-center gap-1.5">
-                <Check size={14} /> Added
-              </span>
-            ) : (
-              "Add to cart"
+            aria-label="Add to cart"
+            className={cn(
+              "h-9 w-9 rounded-full border-slate-300 transition",
+              added && "border-emerald-500 text-emerald-600"
             )}
+          >
+            {added ? <Check size={16} /> : <ShoppingBag size={16} />}
           </Button>
         </div>
       </div>
