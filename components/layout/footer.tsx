@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Store, ShoppingBag, Heart, HelpCircle } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
@@ -17,6 +20,10 @@ const footerLinks = {
 };
 
 export function Footer() {
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith("/admin") || pathname.startsWith("/vendor");
+  if (isDashboard) return null;
+
   return (
     <footer className="mt-auto border-t bg-muted/40">
       <Container className="py-12">

@@ -1,19 +1,26 @@
-import { LayoutDashboard, Users } from "lucide-react";
-import { Container } from "@/components/layout/container";
-import { DashboardNav } from "@/components/layout/dashboard-nav";
-
-const adminNav = [
-  { href: "/admin", label: "Overview", icon: <LayoutDashboard className="size-4" /> },
-  { href: "/admin/vendors", label: "Vendors", icon: <Users className="size-4" /> },
-];
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { Separator } from "@/components/ui/separator";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Container className="py-8 sm:py-10">
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <DashboardNav items={adminNav} title="Admin" />
-        <div className="min-w-0 flex-1">{children}</div>
-      </div>
-    </Container>
+    <TooltipProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="sticky top-0 z-50 flex h-12 shrink-0 items-center justify-between border-b bg-background/50 backdrop-blur-md px-6">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger />
+              <Separator orientation="vertical" className="h-4" />
+              <span className="text-sm font-medium text-muted-foreground">Admin Console</span>
+            </div>
+          </header>
+          <div className="p-6 md:p-8 max-w-7xl mx-auto w-full">
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }

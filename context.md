@@ -70,12 +70,43 @@ MVP functionality is done on `mvp/marketplace-build`. Current work is a full UI/
 - [x] Wishlist — consistent card grid and empty state
 - [x] Vendor/admin — sidebar dashboard nav via `layout.tsx`, stat cards with icons, loading skeletons
 
+## Recent Implementations (July 2026)
+- [x] **Vendor Management Page Redesign** (`app/admin/vendors/page.tsx`)
+  - Changed from modal popup to collapsible dropdown view for better UX
+  - Added comprehensive vendor detail view with all schema fields:
+    - Financial Overview: Balance, Total Earnings, Commission Rate, Order Count
+    - Business Information: Name, Email, Phone, Address, Tax ID, Description
+    - Account Information: Owner, Email, Join Date, Status, Status Timestamps (approved_at, rejected_at, suspended_at)
+    - Payout Information: Payout Method, Payout Details
+  - Enhanced vendor list cards to show quick financial stats (balance, earnings, commission rate)
+  - Added status-specific action buttons (approve/reject for pending, suspend for approved, reactivate for suspended)
+  - Fixed TypeScript interface to include all vendor fields from database schema
+- [x] **Vendor Orders Data Handling** (`app/vendor/page.tsx`)
+  - Fixed data fetching to handle both array and single object cases for nested relationships
+  - Improved customer name extraction from orders/users data
+  - Fixed total items calculation for order descriptions
+- [x] **Vendor Orders Page Redesign** (`app/vendor/orders/page.tsx`)
+  - Redesigned to match vendor management page layout with Card component
+  - Added status filter toggle group (All, Pending, Processing, Shipped, Delivered, Cancelled)
+  - Added search functionality for orders (searches by customer name, order ID, and items)
+  - Table now shows: Order Details (ID + items), Customer, Status, Total/Earnings, Date, and Actions
+  - Fixed data extraction logic to handle Supabase array responses for nested relationships
+  - Resolved "0 items" and missing customer name display issues
+  - Added loading states and empty state with Package icon
+  - Applied same data extraction fix as vendor dashboard for consistency
+- [x] **Currency Formatting**
+  - Updated all currency displays to use GHC (Ghanaian Cedi) via centralized `formatCurrency` utility
+  - Applied across vendor dashboard, admin dashboard, and vendor management pages
+- [x] **Theme Colors**
+  - Updated CSS variables to new vibrant color palette (Electric Blue, Neon Green, Deep Navy, Crisp White)
+  - Applied to both light and dark modes in `app/globals.css`
+
 ## Remaining (UI redesign)
-- [ ] Run full build + visual smoke-test (`npm run build && npm run dev`)
-- [ ] Vendor register page — apply new `AuthShell` styling
-- [ ] Product reviews component — match new design tokens
-- [ ] Dark mode polish (tokens defined, not toggled in UI)
-- [ ] Commit and push `feature/ui-redesign`
+- [x] Run full build + visual smoke-test (`npm run build && npm run dev`)
+- [x] Vendor register page — apply new `AuthShell` styling
+- [x] Product reviews component — match new design tokens
+- [x] Dark mode polish (tokens defined, not toggled in UI)
+- [x] Commit and push `feature/ui-redesign`
 
 ## Known Issues / To Do
 - [ ] **ngrok in production** — Currently configured with ngrok for local development. Determine if ngrok is needed in production environment or if proper domain/SSL setup is required.
